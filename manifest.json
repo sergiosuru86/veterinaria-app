@@ -1,0 +1,15 @@
+{
+  "name": "Veterinaria Central",
+  "short_name": "VetCentral",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1055/1055185.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

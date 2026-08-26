@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Veterinario</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', }
+  </script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    if (localStorage.getItem('veterinaria_tema') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen transition-colors duration-200">
+
+  <!-- ========================================= -->
+  <!-- PANTALLA DE LOGIN (SEGURIDAD)             -->
+  <!-- ========================================= -->
+  <div id="pantalla-login" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[100] flex items-center justify-center p-4 transition-colors">
+    <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-sm text-center border border-slate-200 dark:border-slate-700">
+      <div class="w-16 h-16 bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Veterinaria Central</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Ingresá tu PIN de seguridad</p>
+
+      <form id="form-login" class="space-y-4">
+        <div>
+          <input type="password" id="input-pin" required placeholder="****" class="w-full px-4 py-3 text-center tracking-widest text-2xl border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-700 dark:text-white" autocomplete="off">
+          <p id="error-pin" class="text-rose-500 text-xs font-semibold mt-2 hidden">PIN incorrecto. Intentá nuevamente.</p>
+        </div>
+        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md">
+          Ingresar <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+      <p class="text-xs text-slate-400 mt-6">El PIN por defecto es: <strong>1234</strong></p>
+    </div>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- CONTENEDOR PRINCIPAL DE LA APP (OCULTO)   -->
+  <!-- ========================================= -->
+  <div id="app-principal" class="hidden pb-20">
+
+    <!-- Barra Superior -->
+    <header class="bg-teal-700 dark:bg-teal-900 text-white shadow-md relative z-50">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-paw text-2xl text-teal-200"></i>
+          <h1 class="text-xl font-bold tracking-wide">Veterinaria Central</h1>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <span class="text-xs bg-teal-800 dark:bg-teal-950 px-3 py-1 rounded-full text-teal-200 hidden sm:inline-block">v2.0 Segura</span>
+          
+          <button onclick="toggleMenuOpciones()" class="w-10 h-10 rounded-full hover:bg-teal-600 dark:hover:bg-teal-800 transition flex items-center justify-center text-xl focus:outline-none relative">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+          </button>
+
+          <div id="menu-opciones" class="hidden absolute right-4 top-16 mt-1 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden transform origin-top-right">
+            <div class="py-1">
+              <button onclick="cambiarPin()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3">
+                <i class="fa-solid fa-key text-teal-600 dark:text-teal-400 w-5"></i> Cambiar PIN
+              </button>
+              <button onclick="descargarBaseDeDatos()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700">
+                <i class="fa-solid fa-download text-teal-600 dark:text-teal-400 w-5"></i> Descargar Datos
+              </button>
+              <label class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700 cursor-pointer mb-0">
+                <i class="fa-solid fa-upload text-amber-500 dark:text-amber-400 w-5"></i> Importar Datos
+                <input type="file" id="input-importar" accept=".json" class="hidden" onchange="importarBaseDeDatos(event)">
+              </label>
+              <button onclick="toggleModoOscuro()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700">
+                <i class="fa-solid fa-moon text-indigo-500 dark:text-indigo-300 w-5"></i> Modo Oscuro
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================= -->
+    <!-- VISTA 1: PACIENTES Y DIRECTORIO           -->
+    <!-- ========================================= -->
+    <main id="vista-pacientes" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 block">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
+        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-teal-600 dark:text-teal-400"></i> Nuevo Paciente
+        </h2>
+        <form id="form-paciente" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre de la Mascota</label>
+            <input type="text" id="nombre" required placeholder="Ej: Milo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Especie</label>
+              <select id="especie" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Raza</label>
+              <input type="text" id="raza" placeholder="Ej: Mestizo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nacimiento</label>
+              <input type="date" id="fechaNacimiento" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white text-slate-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Peso (kg)</label>
+              <input type="number" step="0.1" id="peso" placeholder="Ej: 8.5" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+          </div>
+          <div class="border-t border-slate-100 dark:border-slate-700 pt-3 mt-3">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Tutor / Dueño</label>
+            <input type="text" id="tutor" required placeholder="Nombre completo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 bg-white dark:bg-slate-700 dark:text-white">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Teléfono / WhatsApp</label>
+            <input type="tel" id="telefono" placeholder="Ej: 549375715123456" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 bg-white dark:bg-slate-700 dark:text-white">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Dirección</label>
+            <input type="text" id="direccion" placeholder="Ej: Calle Principal 123" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+            <i class="fa-solid fa-save"></i> Registrar Paciente
+          </button>
+        </form>
+      </section>
+
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
+          <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-folder-open text-teal-600 dark:text-teal-400"></i> Directorio de Pacientes
+          </h2>
+          <span id="contador" class="text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full">0 Pacientes</span>
+        </div>
+        <div class="mt-4 relative">
+          <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
+          <input type="text" id="buscador" placeholder="Buscar por nombre de mascota o tutor..." class="w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+        </div>
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                <th class="py-3 px-3">Mascota</th>
+                <th class="py-3 px-2">Especie / Raza</th>
+                <th class="py-3 px-2">Edad / Peso</th>
+                <th class="py-3 px-2 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-pacientes" class="text-sm"></tbody>
+          </table>
+          <div id="vacio" class="text-center py-10 text-slate-400 text-sm">
+            No se encontraron pacientes.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================= -->
+    <!-- VISTA 2: AGENDA DE TURNOS                 -->
+    <!-- ========================================= -->
+    <main id="vista-agenda" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
+        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-plus text-teal-600 dark:text-teal-400"></i> Agendar Turno
+        </h2>
+        <form id="form-turno" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Fecha</label>
+              <input type="date" id="turno-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Hora</label>
+              <input type="time" id="turno-hora" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre (Mascota / Tutor)</label>
+            <input type="text" id="turno-nombre" required placeholder="Ej: Milo (Juan Perez)" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">WhatsApp (Para recordatorios)</label>
+            <input type="tel" id="turno-telefono" placeholder="Ej: 549375715123456" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Motivo / Tipo de turno</label>
+            <select id="turno-motivo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+              <option value="Consulta Clínica">Consulta Clínica</option>
+              <option value="Vacunación">Vacunación</option>
+              <option value="Cirugía">Cirugía</option>
+              <option value="Peluquería / Baño">Peluquería / Baño</option>
+              <option value="Control">Control</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-2">
+            <i class="fa-solid fa-calendar-check"></i> Guardar Turno
+          </button>
+        </form>
+      </section>
+
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
+        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-700">
+          <i class="fa-regular fa-calendar-days text-teal-600 dark:text-teal-400"></i> Próximos Turnos
+        </h2>
+        <div id="lista-turnos" class="space-y-3 mt-2"></div>
+        <div id="vacio-turnos" class="text-center py-10 text-slate-400 text-sm hidden">
+          No hay turnos programados.
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================= -->
+    <!-- VISTA 3: STOCK E INVENTARIO               -->
+    <!-- ========================================= -->
+    <main id="vista-stock" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
+        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-box-open text-teal-600 dark:text-teal-400"></i> Nuevo Artículo
+        </h2>
+        <form id="form-stock" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre / Descripción</label>
+            <input type="text" id="stock-nombre" required placeholder="Ej: Pipeta Antipulgas - Perro Mediano" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Categoría</label>
+            <select id="stock-categoria" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+              <option value="Medicamento">Medicamentos / Farmacia</option>
+              <option value="Alimento">Alimentos</option>
+              <option value="Accesorio">Accesorios / Petshop</option>
+              <option value="Insumo">Insumos Internos</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Cantidad Inicial</label>
+              <input type="number" id="stock-cantidad" min="0" required placeholder="Ej: 10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Precio Unitario ($)</label>
+              <input type="number" step="0.01" id="stock-precio" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+            <i class="fa-solid fa-plus"></i> Agregar al Inventario
+          </button>
+        </form>
+      </section>
+
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
+          <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-list text-teal-600 dark:text-teal-400"></i> Inventario Actual
+          </h2>
+        </div>
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                <th class="py-3 px-3">Artículo</th>
+                <th class="py-3 px-2">Categoría</th>
+                <th class="py-3 px-2 text-center">Cantidad</th>
+                <th class="py-3 px-2">Precio</th>
+                <th class="py-3 px-2 text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-stock" class="text-sm"></tbody>
+          </table>
+          <div id="vacio-stock" class="text-center py-10 text-slate-400 text-sm hidden">
+            No hay artículos en el inventario.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================= -->
+    <!-- VISTA 4: CAJA Y VENTAS                    -->
+    <!-- ========================================= -->
+    <main id="vista-caja" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
+        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-cash-register text-teal-600 dark:text-teal-400"></i> Registrar Ingreso
+        </h2>
+        <form id="form-caja" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Fecha</label>
+            <input type="date" id="caja-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+
+          <div class="p-3 bg-teal-50 dark:bg-slate-700/50 rounded-lg border border-teal-100 dark:border-slate-600">
+            <label class="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase mb-1">Vender artículo del Stock (Opcional)</label>
+            <select id="caja-stock-select" onchange="actualizarFormCajaStock()" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm mb-2">
+            </select>
+            
+            <div id="div-caja-cantidad" class="hidden grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Cant. a vender</label>
+                <input type="number" id="caja-stock-cantidad" min="1" value="1" oninput="actualizarMontoStock()" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm">
+              </div>
+              <div class="flex items-end pb-2">
+                <span class="text-xs text-slate-500 dark:text-slate-400 italic">Se restará del stock</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Detalle / Concepto</label>
+            <input type="text" id="caja-concepto" required placeholder="Ej: Consulta Milo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Monto Cobrado ($)</label>
+              <input type="number" step="0.01" id="caja-monto" required placeholder="Ej: 15000" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-700">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Medio de Pago</label>
+              <select id="caja-medio" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Mercado Pago">Mercado Pago</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Tarjeta">Tarjeta Déb/Créd</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+            <i class="fa-solid fa-plus"></i> Guardar Ingreso
+          </button>
+        </form>
+      </section>
+
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
+        
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
+          <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-wallet text-teal-600 dark:text-teal-400"></i> Movimientos
+          </h2>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Ver movimientos del día:</span>
+            <input type="date" id="caja-filtro-fecha" onchange="renderCaja()" class="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-700 dark:text-white">
+          </div>
+        </div>
+
+        <div class="my-6 bg-teal-50 dark:bg-teal-900/40 border border-teal-100 dark:border-teal-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div class="text-center sm:text-left">
+            <span class="text-teal-800 dark:text-teal-300 font-bold uppercase text-xs tracking-wide block mb-1">Total Mensual Acumulado</span>
+            <span id="caja-total-mes" class="text-xl font-semibold text-teal-600 dark:text-teal-400">$0.00</span>
+          </div>
+          <div class="text-center sm:text-right border-t sm:border-t-0 sm:border-l border-teal-200 dark:border-teal-700 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto">
+            <span class="text-teal-800 dark:text-teal-300 font-bold uppercase text-sm tracking-wide block mb-1">Total del Día Seleccionado</span>
+            <span id="caja-total-dia" class="text-3xl font-black text-teal-700 dark:text-teal-300">$0.00</span>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                <th class="py-3 px-3">Fecha</th>
+                <th class="py-3 px-3">Concepto</th>
+                <th class="py-3 px-2">Medio</th>
+                <th class="py-3 px-2">Monto</th>
+                <th class="py-3 px-2 text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-caja" class="text-sm"></tbody>
+          </table>
+          <div id="vacio-caja" class="text-center py-10 text-slate-400 text-sm hidden">
+            No hay ingresos registrados en esta fecha.
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ========================================= -->
+    <!-- NAVEGACIÓN INFERIOR (4 Pestañas)          -->
+    <!-- ========================================= -->
+    <nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 transition-colors">
+      <div class="max-w-6xl mx-auto flex">
+        <button id="btn-tab-pacientes" onclick="cambiarVista('pacientes')" class="flex-1 py-3 text-center transition duration-200 border-t-2 border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-slate-700/50">
+          <i class="fa-solid fa-users text-xl mb-1 block"></i>
+          <span class="text-[10px] sm:text-xs font-semibold">Pacientes</span>
+        </button>
+        <button id="btn-tab-agenda" onclick="cambiarVista('agenda')" class="flex-1 py-3 text-center transition duration-200 border-t-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400">
+          <i class="fa-solid fa-calendar-days text-xl mb-1 block"></i>
+          <span class="text-[10px] sm:text-xs font-semibold">Agenda</span>
+        </button>
+        <button id="btn-tab-stock" onclick="cambiarVista('stock')" class="flex-1 py-3 text-center transition duration-200 border-t-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400">
+          <i class="fa-solid fa-box-open text-xl mb-1 block"></i>
+          <span class="text-[10px] sm:text-xs font-semibold">Stock</span>
+        </button>
+        <button id="btn-tab-caja" onclick="cambiarVista('caja')" class="flex-1 py-3 text-center transition duration-200 border-t-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400">
+          <i class="fa-solid fa-cash-register text-xl mb-1 block"></i>
+          <span class="text-[10px] sm:text-xs font-semibold">Caja</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ========================================= -->
+    <!-- MODAL: Historial Clínico                  -->
+    <!-- ========================================= -->
+    <div id="modal-historial" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden transition-colors">
+        <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <div>
+            <h3 class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
+              <i class="fa-solid fa-notes-medical"></i> Ficha Clínica: <span id="modal-nombre-mascota"></span>
+            </h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" id="modal-datos-tutor"></p>
+          </div>
+          <button onclick="cerrarHistorial()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-900/50">
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm mb-6 transition-colors">
+            <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 uppercase">Agregar Nuevo Registro</h4>
+            <form id="form-registro" class="space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Fecha</label>
+                  <input type="date" id="reg-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Tipo de Atención</label>
+                  <select id="reg-tipo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+                    <option value="Consulta General">Consulta General</option>
+                    <option value="Vacunación">Vacunación</option>
+                    <option value="Desparasitación">Desparasitación</option>
+                    <option value="Cirugía">Cirugía</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Peso actual (kg)</label>
+                  <input type="number" step="0.1" id="reg-peso" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Detalles (Síntomas, tratamiento...)</label>
+                <textarea id="reg-detalles" required rows="2" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none bg-white dark:bg-slate-700 dark:text-white"></textarea>
+              </div>
+              <div class="flex justify-end mt-2">
+                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-check"></i> Guardar Registro
+                </button>
+              </div>
+            </form>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 uppercase border-b border-slate-200 dark:border-slate-700 pb-2">Historial de Visitas</h4>
+            <div id="lista-registros" class="space-y-4"></div>
+            <div id="sin-registros" class="text-center py-6 text-slate-400 text-sm hidden">Sin registros.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- FIN APP PRINCIPAL -->
+
+  <!-- ========================================= -->
+  <!-- LÓGICA JAVASCRIPT                         -->
+  <!-- ========================================= -->
+  <script>
+    // --- VARIABLES GLOBALES ---
+    let pacientes = JSON.parse(localStorage.getItem('veterinaria_pacientes')) || [];
+    let turnos = JSON.parse(localStorage.getItem('veterinaria_turnos')) || [];
+    let inventario = JSON.parse(localStorage.getItem('veterinaria_stock')) || [];
+    let caja = JSON.parse(localStorage.getItem('veterinaria_caja')) || []; 
+    let pinGuardado = localStorage.getItem('veterinaria_pin') || '1234';
+    
+    pacientes.forEach(p => { if(!p.historial) p.historial = []; });
+
+    // ---------------------------------------------------
+    // X. SISTEMA DE LOGIN Y SEGURIDAD
+    // ---------------------------------------------------
+    const pantallaLogin = document.getElementById('pantalla-login');
+    const appPrincipal = document.getElementById('app-principal');
+    const errorPin = document.getElementById('error-pin');
+    const inputPin = document.getElementById('input-pin');
+
+    document.getElementById('form-login').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (inputPin.value === pinGuardado) {
+        pantallaLogin.classList.add('hidden');
+        appPrincipal.classList.remove('hidden');
+        // LA CORRECCIÓN ESTÁ ACÁ: se usa 'block' en lugar de 'flex'
+        appPrincipal.classList.add('block'); 
+        
+        // Inicializar vistas al entrar
+        renderPacientes(); 
+        renderTurnos();
+        renderStock();
+        renderCaja();
+      } else {
+        errorPin.classList.remove('hidden');
+        inputPin.value = '';
+      }
+    });
+
+    function cambiarPin() {
+      const nuevoPin = prompt("Ingresá tu nuevo PIN numérico de seguridad:");
+      if (nuevoPin && nuevoPin.trim() !== '') {
+        localStorage.setItem('veterinaria_pin', nuevoPin.trim());
+        pinGuardado = nuevoPin.trim();
+        alert("¡PIN actualizado correctamente! Recordalo para la próxima vez que entres.");
+        toggleMenuOpciones();
+      }
+    }
+
+    // ---------------------------------------------------
+    // A. MENÚ DE OPCIONES Y DESCARGAS
+    // ---------------------------------------------------
+    const menuOpciones = document.getElementById('menu-opciones');
+    function toggleMenuOpciones() { menuOpciones.classList.toggle('hidden'); }
+    
+    document.addEventListener('click', (event) => {
+      const botonOpciones = document.querySelector('button[onclick="toggleMenuOpciones()"]');
+      if (botonOpciones && !botonOpciones.contains(event.target) && !menuOpciones.contains(event.target)) {
+        menuOpciones.classList.add('hidden');
+      }
+    });
+
+    function toggleModoOscuro() {
+      const htmlElement = document.documentElement;
+      htmlElement.classList.toggle('dark');
+      localStorage.setItem('veterinaria_tema', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+      toggleMenuOpciones();
+    }
+
+    function descargarBaseDeDatos() {
+      const baseDeDatos = { fecha_exportacion: new Date().toISOString(), pacientes, turnos, inventario, caja };
+      const blob = new Blob([JSON.stringify(baseDeDatos, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = `Veterinaria_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+      toggleMenuOpciones(); alert("¡Base de datos descargada correctamente!");
+    }
+
+    function importarBaseDeDatos(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const datos = JSON.parse(e.target.result);
+          if (datos.pacientes && Array.isArray(datos.pacientes)) {
+            pacientes = datos.pacientes; localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes));
+          }
+          if (datos.turnos && Array.isArray(datos.turnos)) {
+            turnos = datos.turnos; localStorage.setItem('veterinaria_turnos', JSON.stringify(turnos));
+          }
+          if (datos.inventario && Array.isArray(datos.inventario)) {
+            inventario = datos.inventario; localStorage.setItem('veterinaria_stock', JSON.stringify(inventario));
+          }
+          if (datos.caja && Array.isArray(datos.caja)) {
+            caja = datos.caja; localStorage.setItem('veterinaria_caja', JSON.stringify(caja));
+          }
+          renderPacientes(); renderTurnos(); renderStock(); renderCaja(); toggleMenuOpciones();
+          alert("¡Base de datos importada exitosamente!");
+        } catch (error) {
+          alert("Error: El archivo no tiene el formato correcto.");
+        }
+        event.target.value = ''; 
+      };
+      reader.readAsText(file);
+    }
+
+    // ---------------------------------------------------
+    // 1. SISTEMA DE PESTAÑAS (VISTAS)
+    // ---------------------------------------------------
+    function cambiarVista(vista) {
+      const vistas = ['pacientes', 'agenda', 'stock', 'caja'];
+      vistas.forEach(v => {
+        const elemento = document.getElementById(`vista-${v}`);
+        const boton = document.getElementById(`btn-tab-${v}`);
+        if (v === vista) {
+          elemento.classList.remove('hidden'); elemento.classList.add('block');
+          boton.className = "flex-1 py-3 text-center transition duration-200 border-t-2 border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-slate-700/50";
+        } else {
+          elemento.classList.add('hidden'); elemento.classList.remove('block');
+          boton.className = "flex-1 py-3 text-center transition duration-200 border-t-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400";
+        }
+      });
+      const hoy = new Date().toISOString().split('T')[0];
+      if (vista === 'agenda') document.getElementById('turno-fecha').value = hoy;
+      if (vista === 'caja') {
+        document.getElementById('caja-fecha').value = hoy;
+        document.getElementById('caja-filtro-fecha').value = hoy;
+        renderCaja();
+      }
+    }
+
+    // ---------------------------------------------------
+    // 2. MÓDULO PACIENTES
+    // ---------------------------------------------------
+    function calcularEdad(fechaNacimiento) {
+      if (!fechaNacimiento) return "Desconocida";
+      const hoy = new Date(); const nac = new Date(fechaNacimiento);
+      let anios = hoy.getFullYear() - nac.getFullYear(); let meses = hoy.getMonth() - nac.getMonth();
+      if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) { anios--; meses += 12; }
+      if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses = 11; }
+      if (anios <= 0 && meses <= 0) return "Menos de 1 mes";
+      let textoAnios = anios > 0 ? `${anios} año${anios > 1 ? 's' : ''}` : '';
+      let textoMeses = meses > 0 ? `${meses} mes${meses > 1 ? 'es' : ''}` : '';
+      if (textoAnios && textoMeses) return `${textoAnios} y ${textoMeses}`;
+      return textoAnios || textoMeses;
+    }
+
+    function renderPacientes() {
+      const tabla = document.getElementById('tabla-pacientes');
+      const vacio = document.getElementById('vacio');
+      const buscador = document.getElementById('buscador').value.toLowerCase();
+      tabla.innerHTML = '';
+
+      const filtrados = pacientes.map((p, index) => ({ ...p, idOriginal: index }))
+        .filter(p => p.nombre.toLowerCase().includes(buscador) || p.tutor.toLowerCase().includes(buscador));
+
+      document.getElementById('contador').textContent = `${filtrados.length} Mascota${filtrados.length === 1 ? '' : 's'}`;
+      if (filtrados.length === 0) { vacio.classList.remove('hidden'); return; }
+      vacio.classList.add('hidden');
+
+      const gruposPorTutor = {};
+      filtrados.forEach(p => {
+        const nombreTutor = p.tutor.toUpperCase();
+        if (!gruposPorTutor[nombreTutor]) gruposPorTutor[nombreTutor] = { tutorOriginal: p.tutor, telefono: p.telefono, direccion: p.direccion, mascotas: [] };
+        gruposPorTutor[nombreTutor].mascotas.push(p);
+      });
+
+      for (const key in gruposPorTutor) {
+        const info = gruposPorTutor[key];
+        tabla.innerHTML += `
+          <tr class="bg-slate-100 dark:bg-slate-700/50 border-y border-slate-200 dark:border-slate-700 transition-colors">
+            <td colspan="4" class="py-2 px-3">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                <span class="font-bold text-slate-700 dark:text-slate-200 uppercase text-xs"><i class="fa-solid fa-user text-slate-400 mr-1"></i> ${info.tutorOriginal}</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400"><i class="fa-solid fa-phone mr-1"></i> ${info.telefono || '-'}</span>
+              </div>
+            </td>
+          </tr>
+        `;
+        info.mascotas.forEach(p => {
+          let ultimaAtencion = "Sin registros";
+          if (p.historial && p.historial.length > 0) {
+            const fechas = p.historial.map(h => new Date(h.fecha));
+            ultimaAtencion = new Date(Math.max(...fechas)).toLocaleDateString();
+          }
+
+          tabla.innerHTML += `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-50 dark:border-slate-700/50">
+              <td class="py-3 px-3 pl-6">
+                <span class="block font-bold text-teal-900 dark:text-teal-400">${p.nombre}</span>
+                <span class="block text-[10px] text-slate-400 dark:text-slate-500 font-normal mt-0.5">Visita: ${ultimaAtencion}</span>
+              </td>
+              <td class="py-3 px-2 text-xs">
+                <span class="font-semibold bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded dark:text-slate-200">${p.especie}</span> 
+                <br><span class="text-slate-500 dark:text-slate-400">${p.raza}</span>
+              </td>
+              <td class="py-3 px-2 text-sm dark:text-slate-200">${calcularEdad(p.fechaNacimiento)} <br><span class="text-xs text-slate-500 dark:text-slate-400">${p.peso ? p.peso+' kg' : ''}</span></td>
+              <td class="py-3 px-2 text-center space-x-1">
+                <button onclick="abrirHistorial(${p.idOriginal})" class="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 p-1.5 rounded" title="Ver Historial"><i class="fa-solid fa-notes-medical"></i></button>
+                <button onclick="eliminarPaciente(${p.idOriginal})" class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-400 p-1.5 rounded" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    document.getElementById('form-paciente').addEventListener('submit', (e) => {
+      e.preventDefault();
+      pacientes.push({
+        nombre: document.getElementById('nombre').value.trim(), especie: document.getElementById('especie').value,
+        raza: document.getElementById('raza').value.trim(), fechaNacimiento: document.getElementById('fechaNacimiento').value,
+        peso: document.getElementById('peso').value, tutor: document.getElementById('tutor').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(), direccion: document.getElementById('direccion').value.trim(),
+        historial: []
+      });
+      localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); e.target.reset(); renderPacientes();
+    });
+
+    document.getElementById('buscador').addEventListener('input', renderPacientes);
+    window.eliminarPaciente = (idx) => {
+      if (confirm('¿Eliminar mascota?')) { pacientes.splice(idx, 1); localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); renderPacientes(); }
+    };
+
+    const modalHistorial = document.getElementById('modal-historial');
+    let pacienteActualIndex = null;
+    window.abrirHistorial = (idx) => {
+      pacienteActualIndex = idx; const p = pacientes[idx];
+      document.getElementById('modal-nombre-mascota').textContent = p.nombre; document.getElementById('modal-datos-tutor').textContent = `Tutor: ${p.tutor}`;
+      document.getElementById('reg-fecha').valueAsDate = new Date(); renderListaHistorial(); modalHistorial.classList.remove('hidden');
+    };
+    window.cerrarHistorial = () => { modalHistorial.classList.add('hidden'); pacienteActualIndex = null; };
+
+    function renderListaHistorial() {
+      const p = pacientes[pacienteActualIndex];
+      const cont = document.getElementById('lista-registros'); cont.innerHTML = '';
+      if (!p.historial.length) { document.getElementById('sin-registros').classList.remove('hidden'); return; }
+      document.getElementById('sin-registros').classList.add('hidden');
+      
+      const ord = [...p.historial].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+      ord.forEach(reg => {
+        const d = new Date(reg.fecha).toLocaleDateString('es-AR', {timeZone: 'UTC'});
+        cont.innerHTML += `<div class="bg-white dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700 mb-2 transition-colors"><div class="font-bold text-sm text-teal-700 dark:text-teal-400 flex justify-between"><span>${reg.tipo}</span> <span>${d}</span></div><div class="text-sm mt-1 text-slate-700 dark:text-slate-300">${reg.detalles}</div></div>`;
+      });
+    }
+
+    document.getElementById('form-registro').addEventListener('submit', (e) => {
+      e.preventDefault();
+      pacientes[pacienteActualIndex].historial.push({
+        fecha: document.getElementById('reg-fecha').value, tipo: document.getElementById('reg-tipo').value,
+        peso: document.getElementById('reg-peso').value, detalles: document.getElementById('reg-detalles').value.trim()
+      });
+      localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes));
+      e.target.reset(); document.getElementById('reg-fecha').valueAsDate = new Date(); renderListaHistorial(); renderPacientes();
+    });
+
+    // ---------------------------------------------------
+    // 3. MÓDULO AGENDA DE TURNOS
+    // ---------------------------------------------------
+    function renderTurnos() {
+      const contenedor = document.getElementById('lista-turnos');
+      const vacio = document.getElementById('vacio-turnos');
+      contenedor.innerHTML = '';
+      if (turnos.length === 0) { vacio.classList.remove('hidden'); return; }
+      vacio.classList.add('hidden');
+
+      turnos.sort((a, b) => new Date(`${a.fecha}T${a.hora}`) - new Date(`${b.fecha}T${b.hora}`));
+
+      turnos.forEach((t, index) => {
+        const fechaObj = new Date(`${t.fecha}T00:00:00`);
+        const diaStr = fechaObj.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+
+        let btnWhatsApp = '';
+        if (t.telefono) {
+          const numeroLimpio = t.telefono.replace(/\D/g,'');
+          const mensajeTexto = `Hola, te escribimos de Veterinaria Central para recordarte el turno de ${t.nombre} por ${t.motivo} para el día ${diaStr} a las ${t.hora} hs. ¡Te esperamos!`;
+          btnWhatsApp = `<a href="https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensajeTexto)}" target="_blank" class="text-emerald-500 hover:text-emerald-600 transition p-2"><i class="fa-brands fa-whatsapp text-2xl"></i></a>`;
+        } else {
+          btnWhatsApp = `<button onclick="alert('No se registró teléfono')" class="text-slate-300 dark:text-slate-600 transition p-2"><i class="fa-brands fa-whatsapp text-2xl"></i></button>`;
+        }
+
+        contenedor.innerHTML += `
+          <div class="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+              <div class="bg-teal-50 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 rounded-lg p-2 text-center min-w-[75px]">
+                <span class="block text-xs font-bold uppercase">${diaStr}</span>
+                <span class="block text-lg font-bold">${t.hora}</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-100 text-md">${t.nombre}</h4>
+                <span class="text-sm text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-600 px-2 py-0.5 rounded inline-block mt-1">${t.motivo}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${btnWhatsApp}
+              <button onclick="eliminarTurno(${index})" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition p-2"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    document.getElementById('form-turno').addEventListener('submit', (e) => {
+      e.preventDefault();
+      turnos.push({
+        fecha: document.getElementById('turno-fecha').value, hora: document.getElementById('turno-hora').value,
+        nombre: document.getElementById('turno-nombre').value.trim(), telefono: document.getElementById('turno-telefono').value.trim(),
+        motivo: document.getElementById('turno-motivo').value
+      });
+      localStorage.setItem('veterinaria_turnos', JSON.stringify(turnos));
+      e.target.reset(); document.getElementById('turno-fecha').valueAsDate = new Date(); renderTurnos();
+    });
+
+    window.eliminarTurno = (index) => {
+      if (confirm('¿Seguro que deseas cancelar este turno?')) {
+        turnos.splice(index, 1); localStorage.setItem('veterinaria_turnos', JSON.stringify(turnos)); renderTurnos();
+      }
+    };
+
+    // ---------------------------------------------------
+    // 4. MÓDULO INVENTARIO Y STOCK
+    // ---------------------------------------------------
+    function renderStock() {
+      const tabla = document.getElementById('tabla-stock');
+      const vacio = document.getElementById('vacio-stock');
+      tabla.innerHTML = '';
+      
+      actualizarSelectStockCaja();
+
+      if (inventario.length === 0) { vacio.classList.remove('hidden'); return; }
+      vacio.classList.add('hidden');
+
+      inventario.forEach((item, index) => {
+        const esBajoStock = item.cantidad <= 3;
+        const colorCantidad = esBajoStock ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-800 dark:text-slate-200 font-bold';
+
+        tabla.innerHTML += `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-50 dark:border-slate-700/50">
+            <td class="py-3 px-3 font-medium text-teal-900 dark:text-teal-400 pl-4">${item.nombre}</td>
+            <td class="py-3 px-2 text-xs text-slate-500 dark:text-slate-400">${item.categoria}</td>
+            <td class="py-3 px-2 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button onclick="modificarCantidad(${index}, -1)" class="w-7 h-7 rounded bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                <span class="w-6 text-center ${colorCantidad}">${item.cantidad}</span>
+                <button onclick="modificarCantidad(${index}, 1)" class="w-7 h-7 rounded bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+              </div>
+            </td>
+            <td class="py-3 px-2 text-sm text-slate-700 dark:text-slate-300 font-medium">$${item.precio || 0}</td>
+            <td class="py-3 px-2 text-center">
+              <button onclick="eliminarArticulo(${index})" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    document.getElementById('form-stock').addEventListener('submit', (e) => {
+      e.preventDefault();
+      inventario.push({
+        nombre: document.getElementById('stock-nombre').value.trim(), categoria: document.getElementById('stock-categoria').value,
+        cantidad: parseInt(document.getElementById('stock-cantidad').value), precio: document.getElementById('stock-precio').value
+      });
+      localStorage.setItem('veterinaria_stock', JSON.stringify(inventario));
+      e.target.reset(); renderStock();
+    });
+
+    window.modificarCantidad = (index, delta) => {
+      let nuevaCantidad = inventario[index].cantidad + delta;
+      if (nuevaCantidad < 0) nuevaCantidad = 0; 
+      inventario[index].cantidad = nuevaCantidad; localStorage.setItem('veterinaria_stock', JSON.stringify(inventario)); renderStock();
+    };
+
+    window.eliminarArticulo = (index) => {
+      if (confirm('¿Eliminar artículo?')) {
+        inventario.splice(index, 1); localStorage.setItem('veterinaria_stock', JSON.stringify(inventario)); renderStock();
+      }
+    };
+
+    // ---------------------------------------------------
+    // 5. MÓDULO CAJA Y VENTAS (CON INTEGRACIÓN DE STOCK)
+    // ---------------------------------------------------
+    function actualizarSelectStockCaja() {
+      const select = document.getElementById('caja-stock-select');
+      select.innerHTML = '<option value="">-- Ninguno (Servicio libre o Consulta) --</option>';
+      inventario.forEach((item, index) => {
+        if(item.cantidad > 0) {
+          select.innerHTML += `<option value="${index}">${item.nombre} (Disponibles: ${item.cantidad} | $${item.precio})</option>`;
+        }
+      });
+    }
+
+    window.actualizarFormCajaStock = () => {
+      const select = document.getElementById('caja-stock-select');
+      const divCant = document.getElementById('div-caja-cantidad');
+      const inputConcepto = document.getElementById('caja-concepto');
+      const inputMonto = document.getElementById('caja-monto');
+
+      if(select.value !== "") {
+        const item = inventario[select.value];
+        divCant.classList.remove('hidden');
+        inputConcepto.value = `Venta: ${item.nombre}`;
+        actualizarMontoStock();
+      } else {
+        divCant.classList.add('hidden');
+        inputConcepto.value = "";
+        inputMonto.value = "";
+      }
+    };
+
+    window.actualizarMontoStock = () => {
+      const select = document.getElementById('caja-stock-select');
+      if(select.value === "") return;
+      const item = inventario[select.value];
+      const cant = parseInt(document.getElementById('caja-stock-cantidad').value) || 1;
+      document.getElementById('caja-monto').value = (item.precio * cant).toFixed(2);
+    };
+
+    function renderCaja() {
+      const tabla = document.getElementById('tabla-caja');
+      const vacio = document.getElementById('vacio-caja');
+      const totalDiaDiv = document.getElementById('caja-total-dia');
+      const totalMesDiv = document.getElementById('caja-total-mes');
+      const filtroFecha = document.getElementById('caja-filtro-fecha').value; 
+      const mesFiltro = filtroFecha.substring(0, 7); 
+      
+      tabla.innerHTML = '';
+      let totalDia = 0;
+      let totalMes = 0;
+
+      caja.forEach((ingreso, index) => {
+        const montoNum = parseFloat(ingreso.monto);
+        
+        if (ingreso.fecha.substring(0,7) === mesFiltro) {
+          totalMes += montoNum;
+        }
+
+        if (ingreso.fecha === filtroFecha) {
+          totalDia += montoNum;
+          
+          let iconoMedio = "fa-money-bill-wave"; 
+          if(ingreso.medio === "Mercado Pago" || ingreso.medio === "Transferencia") iconoMedio = "fa-mobile-screen";
+          if(ingreso.medio === "Tarjeta") iconoMedio = "fa-credit-card";
+
+          const fechaObj = new Date(`${ingreso.fecha}T00:00:00`);
+          const fechaMuestra = fechaObj.toLocaleDateString('es-AR');
+
+          tabla.innerHTML += `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-50 dark:border-slate-700/50">
+              <td class="py-3 px-3 text-xs text-slate-500 pl-4">${fechaMuestra}</td>
+              <td class="py-3 px-2 font-medium text-slate-800 dark:text-slate-200">${ingreso.concepto}</td>
+              <td class="py-3 px-2 text-xs text-slate-500 dark:text-slate-400"><i class="fa-solid ${iconoMedio} mr-1"></i> ${ingreso.medio}</td>
+              <td class="py-3 px-2 text-sm text-teal-700 dark:text-teal-400 font-bold">$${montoNum.toFixed(2)}</td>
+              <td class="py-3 px-2 text-center">
+                <button onclick="eliminarIngreso(${index})" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
+              </td>
+            </tr>
+          `;
+        }
+      });
+
+      if (totalDia === 0 && tabla.innerHTML === '') { 
+        vacio.classList.remove('hidden'); 
+      } else {
+        vacio.classList.add('hidden');
+      }
+
+      totalDiaDiv.textContent = `$${totalDia.toFixed(2)}`;
+      totalMesDiv.textContent = `$${totalMes.toFixed(2)}`;
+    }
+
+    document.getElementById('form-caja').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const stockSelectIndex = document.getElementById('caja-stock-select').value;
+      const cantVenta = parseInt(document.getElementById('caja-stock-cantidad').value) || 1;
+
+      if (stockSelectIndex !== "") {
+        if (inventario[stockSelectIndex].cantidad >= cantVenta) {
+          inventario[stockSelectIndex].cantidad -= cantVenta; 
+          localStorage.setItem('veterinaria_stock', JSON.stringify(inventario));
+          renderStock(); 
+        } else {
+          alert("¡No hay suficiente stock de este artículo para realizar la venta!");
+          return; 
+        }
+      }
+
+      caja.push({
+        fecha: document.getElementById('caja-fecha').value,
+        concepto: document.getElementById('caja-concepto').value.trim(),
+        monto: document.getElementById('caja-monto').value,
+        medio: document.getElementById('caja-medio').value
+      });
+      localStorage.setItem('veterinaria_caja', JSON.stringify(caja));
+      
+      e.target.reset();
+      document.getElementById('div-caja-cantidad').classList.add('hidden');
+      document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
+      
+      renderCaja();
+    });
+
+    window.eliminarIngreso = (index) => {
+      if (confirm('¿Seguro que querés eliminar este ingreso de la caja? (Esto NO devolverá el artículo al stock)')) {
+        caja.splice(index, 1); localStorage.setItem('veterinaria_caja', JSON.stringify(caja)); renderCaja();
+      }
+    };
+
+    // INICIAR FECHAS DEFAULT DE CAJA
+    document.getElementById('caja-filtro-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
+  </script>
+</body>
+</html>
