@@ -73,7 +73,7 @@
         
         <div class="flex items-center gap-3">
           <span class="text-xs bg-emerald-500/20 text-emerald-100 border border-emerald-500/30 px-3 py-1 rounded-full hidden sm:flex items-center gap-1">
-            <i class="fa-solid fa-cloud"></i> Firebase Auth
+            <i class="fa-solid fa-cloud"></i> Firebase Sync
           </span>
           
           <button onclick="toggleMenuOpciones()" class="w-10 h-10 rounded-full hover:bg-teal-600 dark:hover:bg-teal-800 transition flex items-center justify-center text-xl focus:outline-none relative">
@@ -102,15 +102,18 @@
     <!-- ========================================= -->
     <main id="vista-pacientes" class="max-w-6xl mx-auto px-4 py-8 block">
       <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full flex flex-col transition-colors">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
+        
+        <!-- Cabecera Pegajosa (Sticky) -->
+        <div class="sticky top-0 z-30 bg-white dark:bg-slate-800 pt-6 pb-4 -mt-6 mb-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <i class="fa-solid fa-folder-open text-teal-600 dark:text-teal-400"></i> Directorio de Pacientes <span id="contador" class="text-xs font-semibold bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full ml-2">0</span>
           </h2>
-          <button onclick="abrirModalNuevoPaciente()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition duration-200 shadow-sm flex items-center gap-2">
+          <button onclick="abrirModalPaciente()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition duration-200 shadow-sm flex items-center gap-2">
             <i class="fa-solid fa-plus"></i> Cargar Paciente
           </button>
         </div>
-        <div class="mt-4 relative">
+
+        <div class="relative">
           <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
           <input type="text" id="buscador" placeholder="Buscar por nombre de mascota o tutor..." class="w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
         </div>
@@ -126,9 +129,7 @@
             </thead>
             <tbody id="tabla-pacientes" class="text-sm"></tbody>
           </table>
-          <div id="vacio" class="text-center py-10 text-slate-400 text-sm">
-            Cargando pacientes desde la nube...
-          </div>
+          <div id="vacio" class="text-center py-10 text-slate-400 text-sm">Cargando pacientes desde la nube...</div>
         </div>
       </section>
     </main>
@@ -136,102 +137,41 @@
     <!-- ========================================= -->
     <!-- VISTA 2: AGENDA DE TURNOS                 -->
     <!-- ========================================= -->
-    <main id="vista-agenda" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
-        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-calendar-plus text-teal-600 dark:text-teal-400"></i> Agendar Turno
-        </h2>
-        <form id="form-turno" class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Fecha</label>
-              <input type="date" id="turno-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Hora</label>
-              <input type="time" id="turno-hora" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre (Mascota / Tutor)</label>
-            <input type="text" id="turno-nombre" required placeholder="Ej: Milo (Juan Perez)" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">WhatsApp (Para recordatorios)</label>
-            <input type="tel" id="turno-telefono" placeholder="Ej: 549375715123456" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Motivo / Tipo de turno</label>
-            <select id="turno-motivo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-              <option value="Consulta Clínica">Consulta Clínica</option>
-              <option value="Vacunación">Vacunación</option>
-              <option value="Cirugía">Cirugía</option>
-              <option value="Peluquería / Baño">Peluquería / Baño</option>
-              <option value="Control">Control</option>
-            </select>
-          </div>
-          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-2">
-            <i class="fa-solid fa-calendar-check"></i> Guardar Turno
+    <main id="vista-agenda" class="max-w-6xl mx-auto px-4 py-8 hidden">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full flex flex-col transition-colors">
+        
+        <!-- Cabecera Pegajosa (Sticky) -->
+        <div class="sticky top-0 z-30 bg-white dark:bg-slate-800 pt-6 pb-4 -mt-6 mb-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+            <i class="fa-regular fa-calendar-days text-teal-600 dark:text-teal-400"></i> Próximos Turnos
+          </h2>
+          <button onclick="abrirModalTurno()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition duration-200 shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Agendar Turno
           </button>
-        </form>
-      </section>
-
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
-        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-700">
-          <i class="fa-regular fa-calendar-days text-teal-600 dark:text-teal-400"></i> Próximos Turnos
-        </h2>
-        <div id="lista-turnos" class="space-y-3 mt-2"></div>
-        <div id="vacio-turnos" class="text-center py-10 text-slate-400 text-sm">
-          Cargando agenda desde la nube...
         </div>
+
+        <div id="lista-turnos" class="space-y-3"></div>
+        <div id="vacio-turnos" class="text-center py-10 text-slate-400 text-sm">Cargando agenda desde la nube...</div>
       </section>
     </main>
 
     <!-- ========================================= -->
     <!-- VISTA 3: STOCK E INVENTARIO               -->
     <!-- ========================================= -->
-    <main id="vista-stock" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
-        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-box-open text-teal-600 dark:text-teal-400"></i> Nuevo Artículo
-        </h2>
-        <form id="form-stock" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre / Descripción</label>
-            <input type="text" id="stock-nombre" required placeholder="Ej: Pipeta Antipulgas - Perro Mediano" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Categoría</label>
-            <select id="stock-categoria" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-              <option value="Medicamento">Medicamentos / Farmacia</option>
-              <option value="Alimento">Alimentos</option>
-              <option value="Accesorio">Accesorios / Petshop</option>
-              <option value="Insumo">Insumos Internos</option>
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Cantidad Inicial</label>
-              <input type="number" id="stock-cantidad" min="0" required placeholder="Ej: 10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Precio Unitario ($)</label>
-              <input type="number" step="0.01" id="stock-precio" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
-            </div>
-          </div>
-          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
-            <i class="fa-solid fa-plus"></i> Agregar al Inventario
-          </button>
-        </form>
-      </section>
-
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
+    <main id="vista-stock" class="max-w-6xl mx-auto px-4 py-8 hidden">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full flex flex-col transition-colors">
+        
+        <!-- Cabecera Pegajosa (Sticky) -->
+        <div class="sticky top-0 z-30 bg-white dark:bg-slate-800 pt-6 pb-4 -mt-6 mb-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <i class="fa-solid fa-clipboard-list text-teal-600 dark:text-teal-400"></i> Inventario Actual
           </h2>
+          <button onclick="abrirModalStock()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition duration-200 shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Nuevo Artículo
+          </button>
         </div>
-        <div class="overflow-x-auto mt-4">
+
+        <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="text-xs uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
@@ -244,9 +184,7 @@
             </thead>
             <tbody id="tabla-stock" class="text-sm"></tbody>
           </table>
-          <div id="vacio-stock" class="text-center py-10 text-slate-400 text-sm">
-            Cargando inventario desde la nube...
-          </div>
+          <div id="vacio-stock" class="text-center py-10 text-slate-400 text-sm">Cargando inventario desde la nube...</div>
         </div>
       </section>
     </main>
@@ -254,71 +192,23 @@
     <!-- ========================================= -->
     <!-- VISTA 4: CAJA Y VENTAS                    -->
     <!-- ========================================= -->
-    <main id="vista-caja" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
-        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-cash-register text-teal-600 dark:text-teal-400"></i> Registrar Ingreso
-        </h2>
-        <form id="form-caja" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Fecha</label>
-            <input type="date" id="caja-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
-          </div>
-
-          <div class="p-3 bg-teal-50 dark:bg-slate-700/50 rounded-lg border border-teal-100 dark:border-slate-600">
-            <label class="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase mb-1">Vender artículo del Stock (Opcional)</label>
-            <select id="caja-stock-select" onchange="actualizarFormCajaStock()" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm mb-2">
-            </select>
-            
-            <div id="div-caja-cantidad" class="hidden grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Cant. a vender</label>
-                <input type="number" id="caja-stock-cantidad" min="1" value="1" oninput="actualizarMontoStock()" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm">
-              </div>
-              <div class="flex items-end pb-2">
-                <span class="text-xs text-slate-500 dark:text-slate-400 italic">Se restará del stock</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Detalle / Concepto</label>
-            <input type="text" id="caja-concepto" required placeholder="Ej: Consulta Milo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Monto Cobrado ($)</label>
-              <input type="number" step="0.01" id="caja-monto" required placeholder="Ej: 15000" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-700">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Medio de Pago</label>
-              <select id="caja-medio" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-                <option value="Efectivo">Efectivo</option>
-                <option value="Mercado Pago">Mercado Pago</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Tarjeta">Tarjeta Déb/Créd</option>
-              </select>
-            </div>
-          </div>
-          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
-            <i class="fa-solid fa-plus"></i> Guardar Ingreso
-          </button>
-        </form>
-      </section>
-
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
+    <main id="vista-caja" class="max-w-6xl mx-auto px-4 py-8 hidden">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full flex flex-col transition-colors">
         
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
-          <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-wallet text-teal-600 dark:text-teal-400"></i> Movimientos
-          </h2>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Ver movimientos del día:</span>
-            <input type="date" id="caja-filtro-fecha" onchange="renderCaja()" class="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-700 dark:text-white">
+        <!-- Cabecera Pegajosa (Sticky) -->
+        <div class="sticky top-0 z-30 bg-white dark:bg-slate-800 pt-6 pb-4 -mt-6 mb-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-teal-600 dark:text-teal-400"></i> Movimientos
+            </h2>
+            <input type="date" id="caja-filtro-fecha" onchange="renderCaja()" class="px-2 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-slate-50 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-teal-500">
           </div>
+          <button onclick="abrirModalCaja()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition duration-200 shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> VENTA / CONSULTA
+          </button>
         </div>
 
-        <div class="my-6 bg-teal-50 dark:bg-teal-900/40 border border-teal-100 dark:border-teal-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="mb-6 bg-teal-50 dark:bg-teal-900/40 border border-teal-100 dark:border-teal-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div class="text-center sm:text-left">
             <span class="text-teal-800 dark:text-teal-300 font-bold uppercase text-xs tracking-wide block mb-1">Total Mensual Acumulado</span>
             <span id="caja-total-mes" class="text-xl font-semibold text-teal-600 dark:text-teal-400">$0.00</span>
@@ -342,12 +232,9 @@
             </thead>
             <tbody id="tabla-caja" class="text-sm"></tbody>
           </table>
-          <div id="vacio-caja" class="text-center py-10 text-slate-400 text-sm">
-            Cargando movimientos desde la nube...
-          </div>
+          <div id="vacio-caja" class="text-center py-10 text-slate-400 text-sm">Cargando movimientos desde la nube...</div>
         </div>
       </section>
-
     </main>
 
     <!-- ========================================= -->
@@ -375,15 +262,15 @@
     </nav>
 
     <!-- ========================================= -->
-    <!-- MODAL: Nuevo Paciente                     -->
+    <!-- MODAL 1: PACIENTES                        -->
     <!-- ========================================= -->
-    <div id="modal-nuevo-paciente" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div id="modal-paciente" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
       <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden transition-colors">
         <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h3 class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
+          <h3 id="titulo-modal-paciente" class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
             <i class="fa-solid fa-plus-circle"></i> Nuevo Paciente
           </h3>
-          <button onclick="cerrarModalNuevoPaciente()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
+          <button onclick="cerrarModalPaciente()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
         </div>
         <div class="p-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
           <form id="form-paciente" class="space-y-4">
@@ -424,7 +311,160 @@
               <input type="text" id="direccion" placeholder="Ej: Calle Principal 123" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
             </div>
             <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
-              <i class="fa-solid fa-save"></i> Registrar Paciente
+              <i class="fa-solid fa-save"></i> Guardar Paciente
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODAL 2: AGENDA (TURNOS)                  -->
+    <!-- ========================================= -->
+    <div id="modal-turno" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden transition-colors">
+        <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 id="titulo-modal-turno" class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-plus"></i> Agendar Turno
+          </h3>
+          <button onclick="cerrarModalTurno()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+          <form id="form-turno" class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Fecha</label>
+                <input type="date" id="turno-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Hora</label>
+                <input type="time" id="turno-hora" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre (Mascota / Tutor)</label>
+              <input type="text" id="turno-nombre" required placeholder="Ej: Milo (Juan Perez)" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">WhatsApp (Para recordatorios)</label>
+              <input type="tel" id="turno-telefono" placeholder="Ej: 549375715123456" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Motivo / Tipo de turno</label>
+              <select id="turno-motivo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+                <option value="Consulta Clínica">Consulta Clínica</option>
+                <option value="Vacunación">Vacunación</option>
+                <option value="Cirugía">Cirugía</option>
+                <option value="Peluquería / Baño">Peluquería / Baño</option>
+                <option value="Control">Control</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+              <i class="fa-solid fa-save"></i> Guardar Turno
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODAL 3: STOCK E INVENTARIO               -->
+    <!-- ========================================= -->
+    <div id="modal-stock" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden transition-colors">
+        <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 id="titulo-modal-stock" class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
+            <i class="fa-solid fa-box-open"></i> Nuevo Artículo
+          </h3>
+          <button onclick="cerrarModalStock()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+          <form id="form-stock" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre / Descripción</label>
+              <input type="text" id="stock-nombre" required placeholder="Ej: Pipeta Antipulgas" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Categoría</label>
+              <select id="stock-categoria" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+                <option value="Medicamento">Medicamentos / Farmacia</option>
+                <option value="Alimento">Alimentos</option>
+                <option value="Accesorio">Accesorios / Petshop</option>
+                <option value="Insumo">Insumos Internos</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Cantidad Inicial</label>
+                <input type="number" id="stock-cantidad" min="0" required placeholder="Ej: 10" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Precio Unitario ($)</label>
+                <input type="number" step="0.01" id="stock-precio" placeholder="Ej: 5000" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+              </div>
+            </div>
+            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+              <i class="fa-solid fa-save"></i> Guardar Artículo
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- MODAL 4: CAJA Y VENTAS                    -->
+    <!-- ========================================= -->
+    <div id="modal-caja" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden transition-colors">
+        <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 id="titulo-modal-caja" class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
+            <i class="fa-solid fa-cash-register"></i> VENTA / CONSULTA
+          </h3>
+          <button onclick="cerrarModalCaja()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+          <form id="form-caja" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Fecha</label>
+              <input type="date" id="caja-fecha" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+
+            <div id="div-caja-stock-selector" class="p-3 bg-teal-50 dark:bg-slate-700/50 rounded-lg border border-teal-100 dark:border-slate-600">
+              <label class="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase mb-1">Vender artículo del Stock (Opcional)</label>
+              <select id="caja-stock-select" onchange="actualizarFormCajaStock()" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm mb-2">
+              </select>
+              <div id="div-caja-cantidad" class="hidden grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Cant. a vender</label>
+                  <input type="number" id="caja-stock-cantidad" min="1" value="1" oninput="actualizarMontoStock()" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white text-sm">
+                </div>
+                <div class="flex items-end pb-2">
+                  <span class="text-xs text-slate-500 dark:text-slate-400 italic">Se restará del stock</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Detalle / Concepto</label>
+              <input type="text" id="caja-concepto" required placeholder="Ej: Consulta Milo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Monto Cobrado ($)</label>
+                <input type="number" step="0.01" id="caja-monto" required placeholder="Ej: 15000" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-700">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Medio de Pago</label>
+                <select id="caja-medio" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Mercado Pago">Mercado Pago</option>
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Tarjeta">Tarjeta Déb/Créd</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+              <i class="fa-solid fa-save"></i> Guardar Ingreso
             </button>
           </form>
         </div>
@@ -494,13 +534,17 @@
   <!-- LÓGICA PRINCIPAL (TODO CONECTADO A NUBE)  -->
   <!-- ========================================= -->
   <script>
-    // Variables globales para almacenar lo que viene de la nube
     let pacientes = [];
     let turnos = [];
     let inventario = [];
     let caja = []; 
     
-    // Función central: Se dispara al loguearse con éxito
+    // Variables para el control de la Edición
+    let editandoPacienteId = null;
+    let editandoTurnoId = null;
+    let editandoStockId = null;
+    let editandoCajaId = null;
+    
     window.iniciarAppVeterinaria = function() {
       cargarPacientesDeFirestore(); 
       cargarTurnosDeFirestore();
@@ -508,7 +552,7 @@
       cargarCajaDeFirestore();
     }
 
-    // --- CARGAS DESDE FIREBASE ---
+    // --- LECTURA DE FIREBASE ---
     window.cargarPacientesDeFirestore = async function() {
       try {
         pacientes = [];
@@ -546,9 +590,7 @@
       } catch (e) { console.error("Error al leer caja:", e); }
     }
 
-    // ---------------------------------------------------
-    // A. MENÚ DE OPCIONES Y DESCARGAS
-    // ---------------------------------------------------
+    // --- OPCIONES GLOBALES ---
     const menuOpciones = document.getElementById('menu-opciones');
     window.toggleMenuOpciones = function() { menuOpciones.classList.toggle('hidden'); }
     
@@ -566,7 +608,6 @@
       toggleMenuOpciones();
     }
 
-    // Dejamos la opción de hacer backup (te descarga lo que está en memoria en ese momento)
     window.descargarCopiaSeguridad = function() {
       const baseDeDatos = { fecha_exportacion: new Date().toISOString(), pacientes, turnos, inventario, caja };
       const blob = new Blob([JSON.stringify(baseDeDatos, null, 2)], { type: 'application/json' });
@@ -577,9 +618,6 @@
       toggleMenuOpciones(); alert("¡Copia de seguridad descargada correctamente!");
     }
 
-    // ---------------------------------------------------
-    // 1. SISTEMA DE PESTAÑAS (VISTAS)
-    // ---------------------------------------------------
     window.cambiarVista = function(vista) {
       const vistas = ['pacientes', 'agenda', 'stock', 'caja'];
       vistas.forEach(v => {
@@ -602,12 +640,36 @@
       }
     }
 
-    // ---------------------------------------------------
-    // 2. MÓDULO PACIENTES (NUBE)
-    // ---------------------------------------------------
-    const modalNuevoPaciente = document.getElementById('modal-nuevo-paciente');
-    window.abrirModalNuevoPaciente = function() { modalNuevoPaciente.classList.remove('hidden'); }
-    window.cerrarModalNuevoPaciente = function() { modalNuevoPaciente.classList.add('hidden'); }
+    // ==========================================
+    // 2. PACIENTES: LÓGICA DE MODALES Y EDICIÓN
+    // ==========================================
+    window.abrirModalPaciente = function(id = null) { 
+      const form = document.getElementById('form-paciente');
+      const titulo = document.getElementById('titulo-modal-paciente');
+      form.reset();
+      editandoPacienteId = id;
+
+      if (id) {
+        titulo.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Paciente';
+        const p = pacientes.find(x => x.id === id);
+        document.getElementById('nombre').value = p.nombre;
+        document.getElementById('especie').value = p.especie;
+        document.getElementById('raza').value = p.raza;
+        document.getElementById('fechaNacimiento').value = p.fechaNacimiento;
+        document.getElementById('peso').value = p.peso;
+        document.getElementById('tutor').value = p.tutor;
+        document.getElementById('telefono').value = p.telefono;
+        document.getElementById('direccion').value = p.direccion;
+      } else {
+        titulo.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Nuevo Paciente';
+      }
+      document.getElementById('modal-paciente').classList.remove('hidden'); 
+    }
+    
+    window.cerrarModalPaciente = function() { 
+      document.getElementById('modal-paciente').classList.add('hidden'); 
+      editandoPacienteId = null;
+    }
 
     function calcularEdad(fechaNacimiento) {
       if (!fechaNacimiento) return "Desconocida";
@@ -636,8 +698,8 @@
       tabla.innerHTML = '';
 
       const filtrados = pacientes.filter(p => p.nombre.toLowerCase().includes(buscador) || p.tutor.toLowerCase().includes(buscador));
-
       document.getElementById('contador').textContent = filtrados.length;
+      
       if (filtrados.length === 0) { 
         vacio.textContent = "No se encontraron pacientes.";
         vacio.classList.remove('hidden'); 
@@ -682,8 +744,9 @@
                 <br><span class="text-slate-500 dark:text-slate-400">${p.raza}</span>
               </td>
               <td class="py-3 px-2 text-sm dark:text-slate-200">${calcularEdad(p.fechaNacimiento)} <br><span class="text-xs text-slate-500 dark:text-slate-400">${p.peso ? p.peso+' kg' : ''}</span></td>
-              <td class="py-3 px-2 text-center space-x-1">
+              <td class="py-3 px-2 text-center space-x-1 whitespace-nowrap">
                 <button onclick="abrirHistorial('${p.id}')" class="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 p-1.5 rounded" title="Ver Historial"><i class="fa-solid fa-notes-medical"></i></button>
+                <button onclick="abrirModalPaciente('${p.id}')" class="text-sky-500 hover:text-sky-700 dark:hover:text-sky-400 p-1.5 rounded" title="Editar Paciente"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="eliminarPaciente('${p.id}')" class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-400 p-1.5 rounded" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
               </td>
             </tr>
@@ -694,7 +757,7 @@
 
     document.getElementById('form-paciente').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nuevoPaciente = {
+      const pacienteData = {
         nombre: document.getElementById('nombre').value.trim(), 
         especie: document.getElementById('especie').value,
         raza: document.getElementById('raza').value.trim(), 
@@ -702,13 +765,20 @@
         peso: document.getElementById('peso').value, 
         tutor: document.getElementById('tutor').value.trim(),
         telefono: document.getElementById('telefono').value.trim(), 
-        direccion: document.getElementById('direccion').value.trim(),
-        historial: []
+        direccion: document.getElementById('direccion').value.trim()
       };
+
       try {
-        await window.fs.addDoc(window.fs.collection(window.db, "pacientes"), nuevoPaciente);
-        e.target.reset(); cerrarModalNuevoPaciente(); cargarPacientesDeFirestore();
-      } catch (error) { alert("Error al guardar el paciente: " + error.message); }
+        if (editandoPacienteId) {
+          const p = pacientes.find(x => x.id === editandoPacienteId);
+          pacienteData.historial = p.historial || [];
+          await window.fs.updateDoc(window.fs.doc(window.db, "pacientes", editandoPacienteId), pacienteData);
+        } else {
+          pacienteData.historial = [];
+          await window.fs.addDoc(window.fs.collection(window.db, "pacientes"), pacienteData);
+        }
+        e.target.reset(); cerrarModalPaciente(); cargarPacientesDeFirestore();
+      } catch (error) { alert("Error al guardar: " + error.message); }
     });
 
     document.getElementById('buscador').addEventListener('input', renderPacientes);
@@ -733,7 +803,6 @@
       document.getElementById('reg-fecha').valueAsDate = new Date(); 
       renderListaHistorial(); modalHistorial.classList.remove('hidden');
     };
-    
     window.cerrarHistorial = () => { modalHistorial.classList.add('hidden'); pacienteActualId = null; };
 
     function renderListaHistorial() {
@@ -767,9 +836,35 @@
       } catch(error) { alert("Error al actualizar la ficha: " + error.message); }
     });
 
-    // ---------------------------------------------------
-    // 3. MÓDULO AGENDA DE TURNOS (NUBE)
-    // ---------------------------------------------------
+    // ==========================================
+    // 3. AGENDA: LÓGICA DE MODALES Y EDICIÓN
+    // ==========================================
+    window.abrirModalTurno = function(id = null) {
+      const form = document.getElementById('form-turno');
+      const titulo = document.getElementById('titulo-modal-turno');
+      form.reset();
+      editandoTurnoId = id;
+
+      if (id) {
+        titulo.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Turno';
+        const t = turnos.find(x => x.id === id);
+        document.getElementById('turno-fecha').value = t.fecha;
+        document.getElementById('turno-hora').value = t.hora;
+        document.getElementById('turno-nombre').value = t.nombre;
+        document.getElementById('turno-telefono').value = t.telefono;
+        document.getElementById('turno-motivo').value = t.motivo;
+      } else {
+        titulo.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Agendar Turno';
+        document.getElementById('turno-fecha').value = new Date().toISOString().split('T')[0];
+      }
+      document.getElementById('modal-turno').classList.remove('hidden');
+    }
+
+    window.cerrarModalTurno = function() {
+      document.getElementById('modal-turno').classList.add('hidden');
+      editandoTurnoId = null;
+    }
+
     function renderTurnos() {
       const contenedor = document.getElementById('lista-turnos');
       const vacio = document.getElementById('vacio-turnos');
@@ -808,6 +903,7 @@
             </div>
             <div class="flex items-center gap-2">
               ${btnWhatsApp}
+              <button onclick="abrirModalTurno('${t.id}')" class="text-sky-500 hover:text-sky-700 dark:hover:text-sky-400 transition p-2" title="Editar"><i class="fa-solid fa-pen text-xl"></i></button>
               <button onclick="eliminarTurno('${t.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition p-2"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
             </div>
           </div>
@@ -817,17 +913,21 @@
 
     document.getElementById('form-turno').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nuevoTurno = {
+      const turnoData = {
         fecha: document.getElementById('turno-fecha').value, 
         hora: document.getElementById('turno-hora').value,
         nombre: document.getElementById('turno-nombre').value.trim(), 
         telefono: document.getElementById('turno-telefono').value.trim(),
         motivo: document.getElementById('turno-motivo').value
       };
+      
       try {
-        await window.fs.addDoc(window.fs.collection(window.db, "turnos"), nuevoTurno);
-        e.target.reset(); document.getElementById('turno-fecha').valueAsDate = new Date();
-        cargarTurnosDeFirestore();
+        if (editandoTurnoId) {
+          await window.fs.updateDoc(window.fs.doc(window.db, "turnos", editandoTurnoId), turnoData);
+        } else {
+          await window.fs.addDoc(window.fs.collection(window.db, "turnos"), turnoData);
+        }
+        e.target.reset(); cerrarModalTurno(); cargarTurnosDeFirestore();
       } catch (error) { alert("Error al guardar turno: " + error.message); }
     });
 
@@ -840,9 +940,33 @@
       }
     };
 
-    // ---------------------------------------------------
-    // 4. MÓDULO INVENTARIO Y STOCK (NUBE)
-    // ---------------------------------------------------
+    // ==========================================
+    // 4. STOCK: LÓGICA DE MODALES Y EDICIÓN
+    // ==========================================
+    window.abrirModalStock = function(id = null) {
+      const form = document.getElementById('form-stock');
+      const titulo = document.getElementById('titulo-modal-stock');
+      form.reset();
+      editandoStockId = id;
+
+      if (id) {
+        titulo.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Artículo';
+        const i = inventario.find(x => x.id === id);
+        document.getElementById('stock-nombre').value = i.nombre;
+        document.getElementById('stock-categoria').value = i.categoria;
+        document.getElementById('stock-cantidad').value = i.cantidad;
+        document.getElementById('stock-precio').value = i.precio;
+      } else {
+        titulo.innerHTML = '<i class="fa-solid fa-box-open"></i> Nuevo Artículo';
+      }
+      document.getElementById('modal-stock').classList.remove('hidden');
+    }
+
+    window.cerrarModalStock = function() {
+      document.getElementById('modal-stock').classList.add('hidden');
+      editandoStockId = null;
+    }
+
     function renderStock() {
       const tabla = document.getElementById('tabla-stock');
       const vacio = document.getElementById('vacio-stock');
@@ -873,7 +997,8 @@
               </div>
             </td>
             <td class="py-3 px-2 text-sm text-slate-700 dark:text-slate-300 font-medium">$${item.precio || 0}</td>
-            <td class="py-3 px-2 text-center">
+            <td class="py-3 px-2 text-center whitespace-nowrap">
+              <button onclick="abrirModalStock('${item.id}')" class="text-sky-500 hover:text-sky-700 dark:hover:text-sky-400 p-1.5 transition" title="Editar"><i class="fa-solid fa-pen"></i></button>
               <button onclick="eliminarArticulo('${item.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           </tr>
@@ -883,15 +1008,20 @@
 
     document.getElementById('form-stock').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nuevoItem = {
+      const stockData = {
         nombre: document.getElementById('stock-nombre').value.trim(), 
         categoria: document.getElementById('stock-categoria').value,
         cantidad: parseInt(document.getElementById('stock-cantidad').value), 
         precio: parseFloat(document.getElementById('stock-precio').value) || 0
       };
+      
       try {
-        await window.fs.addDoc(window.fs.collection(window.db, "inventario"), nuevoItem);
-        e.target.reset(); cargarStockDeFirestore();
+        if (editandoStockId) {
+          await window.fs.updateDoc(window.fs.doc(window.db, "inventario", editandoStockId), stockData);
+        } else {
+          await window.fs.addDoc(window.fs.collection(window.db, "inventario"), stockData);
+        }
+        e.target.reset(); cerrarModalStock(); cargarStockDeFirestore();
       } catch (error) { alert("Error al guardar: " + error.message); }
     });
 
@@ -915,9 +1045,40 @@
       }
     };
 
-    // ---------------------------------------------------
-    // 5. MÓDULO CAJA Y VENTAS (NUBE CON INTEGRACIÓN STOCK)
-    // ---------------------------------------------------
+    // ==========================================
+    // 5. CAJA: LÓGICA DE MODALES Y EDICIÓN
+    // ==========================================
+    window.abrirModalCaja = function(id = null) {
+      const form = document.getElementById('form-caja');
+      const titulo = document.getElementById('titulo-modal-caja');
+      form.reset();
+      editandoCajaId = id;
+      
+      document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
+      const divStock = document.getElementById('div-caja-stock-selector');
+      const divCant = document.getElementById('div-caja-cantidad');
+
+      if (id) {
+        titulo.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Ingreso';
+        const c = caja.find(x => x.id === id);
+        document.getElementById('caja-fecha').value = c.fecha;
+        document.getElementById('caja-concepto').value = c.concepto;
+        document.getElementById('caja-monto').value = c.monto;
+        document.getElementById('caja-medio').value = c.medio;
+        divStock.classList.add('hidden');
+        divCant.classList.add('hidden');
+      } else {
+        titulo.innerHTML = '<i class="fa-solid fa-cash-register"></i> VENTA / CONSULTA';
+        divStock.classList.remove('hidden');
+      }
+      document.getElementById('modal-caja').classList.remove('hidden');
+    }
+
+    window.cerrarModalCaja = function() {
+      document.getElementById('modal-caja').classList.add('hidden');
+      editandoCajaId = null;
+    }
+
     window.actualizarSelectStockCaja = function() {
       const select = document.getElementById('caja-stock-select');
       select.innerHTML = '<option value="">-- Ninguno (Servicio libre o Consulta) --</option>';
@@ -984,8 +1145,9 @@
               <td class="py-3 px-2 font-medium text-slate-800 dark:text-slate-200">${ingreso.concepto}</td>
               <td class="py-3 px-2 text-xs text-slate-500 dark:text-slate-400"><i class="fa-solid ${iconoMedio} mr-1"></i> ${ingreso.medio}</td>
               <td class="py-3 px-2 text-sm text-teal-700 dark:text-teal-400 font-bold">$${montoNum.toFixed(2)}</td>
-              <td class="py-3 px-2 text-center">
-                <button onclick="eliminarIngreso('${ingreso.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
+              <td class="py-3 px-2 text-center whitespace-nowrap">
+                <button onclick="abrirModalCaja('${ingreso.id}')" class="text-sky-500 hover:text-sky-700 dark:hover:text-sky-400 p-1.5 transition" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="eliminarIngreso('${ingreso.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
               </td>
             </tr>
           `;
@@ -1005,27 +1167,28 @@
 
     document.getElementById('form-caja').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const stockSelectId = document.getElementById('caja-stock-select').value;
-      const cantVenta = parseInt(document.getElementById('caja-stock-cantidad').value) || 1;
 
-      // Si se seleccionó un producto del stock, primero restamos la cantidad en la nube
-      if (stockSelectId !== "") {
-        const item = inventario.find(x => x.id === stockSelectId);
-        if (item.cantidad >= cantVenta) {
-          try {
-            await window.fs.updateDoc(window.fs.doc(window.db, "inventario", stockSelectId), {
-              cantidad: item.cantidad - cantVenta
-            });
-            cargarStockDeFirestore(); 
-          } catch(error) { alert("Error al descontar stock: " + error.message); return; }
-        } else {
-          alert("¡No hay suficiente stock de este artículo para realizar la venta!");
-          return; 
+      if (!editandoCajaId) {
+        const stockSelectId = document.getElementById('caja-stock-select').value;
+        const cantVenta = parseInt(document.getElementById('caja-stock-cantidad').value) || 1;
+
+        if (stockSelectId !== "") {
+          const item = inventario.find(x => x.id === stockSelectId);
+          if (item.cantidad >= cantVenta) {
+            try {
+              await window.fs.updateDoc(window.fs.doc(window.db, "inventario", stockSelectId), {
+                cantidad: item.cantidad - cantVenta
+              });
+              cargarStockDeFirestore(); 
+            } catch(error) { alert("Error al descontar stock: " + error.message); return; }
+          } else {
+            alert("¡No hay suficiente stock de este artículo para realizar la venta!");
+            return; 
+          }
         }
       }
 
-      // Luego, registramos el ingreso en la caja
-      const nuevoIngreso = {
+      const cajaData = {
         fecha: document.getElementById('caja-fecha').value,
         concepto: document.getElementById('caja-concepto').value.trim(),
         monto: parseFloat(document.getElementById('caja-monto').value) || 0,
@@ -1033,11 +1196,12 @@
       };
       
       try {
-        await window.fs.addDoc(window.fs.collection(window.db, "caja"), nuevoIngreso);
-        e.target.reset();
-        document.getElementById('div-caja-cantidad').classList.add('hidden');
-        document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
-        cargarCajaDeFirestore();
+        if (editandoCajaId) {
+          await window.fs.updateDoc(window.fs.doc(window.db, "caja", editandoCajaId), cajaData);
+        } else {
+          await window.fs.addDoc(window.fs.collection(window.db, "caja"), cajaData);
+        }
+        e.target.reset(); cerrarModalCaja(); cargarCajaDeFirestore();
       } catch(error) { alert("Error al guardar ingreso: " + error.message); }
     });
 
@@ -1052,7 +1216,6 @@
 
     // INICIAR FECHAS DEFAULT DE CAJA
     document.getElementById('caja-filtro-fecha').value = new Date().toISOString().split('T')[0];
-    document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
 
     // --- PWA: REGISTRO DEL SERVICE WORKER ---
     if ('serviceWorker' in navigator) {
