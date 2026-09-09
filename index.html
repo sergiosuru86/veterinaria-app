@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sistema Veterinario</title>
   
-  <!-- CONFIGURACIÓN PWA Y MODO APP (PANTALLA COMPLETA) -->
+  <!-- CONFIGURACIÓN PWA Y MODO APP -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f766e">
   <meta name="mobile-web-app-capable" content="yes">
@@ -30,26 +30,30 @@
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen transition-colors duration-200">
 
   <!-- ========================================= -->
-  <!-- PANTALLA DE LOGIN (SEGURIDAD)             -->
+  <!-- PANTALLA DE LOGIN SEGURA (FIREBASE)       -->
   <!-- ========================================= -->
   <div id="pantalla-login" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-[100] flex items-center justify-center p-4 transition-colors">
     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-sm text-center border border-slate-200 dark:border-slate-700">
       <div class="w-16 h-16 bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-        <i class="fa-solid fa-lock"></i>
+        <i class="fa-solid fa-shield-halved"></i>
       </div>
-      <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Veterinaria Central</h2>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Ingresá tu PIN de seguridad</p>
+      <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Acceso Seguro</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Iniciá sesión con tu cuenta de Google Firebase</p>
 
       <form id="form-login" class="space-y-4">
         <div>
-          <input type="password" id="input-pin" required placeholder="****" class="w-full px-4 py-3 text-center tracking-widest text-2xl border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-700 dark:text-white" autocomplete="off">
-          <p id="error-pin" class="text-rose-500 text-xs font-semibold mt-2 hidden">PIN incorrecto. Intentá nuevamente.</p>
+          <label class="block text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Correo Electrónico</label>
+          <input type="email" id="input-email" required placeholder="tu@correo.com" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-700 dark:text-white" autocomplete="email">
         </div>
-        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md">
+        <div>
+          <label class="block text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Contraseña</label>
+          <input type="password" id="input-password" required placeholder="••••••••" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-700 dark:text-white" autocomplete="current-password">
+          <p id="error-login" class="text-rose-500 text-xs font-semibold mt-2 hidden">Credenciales incorrectas. Verificá tus datos.</p>
+        </div>
+        <button type="submit" id="btn-ingresar" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-md">
           Ingresar <i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
-      <p class="text-xs text-slate-400 mt-6">El PIN por defecto es: <strong>1234</strong></p>
     </div>
   </div>
 
@@ -67,7 +71,9 @@
         </div>
         
         <div class="flex items-center gap-3">
-          <span class="text-xs bg-teal-800 dark:bg-teal-950 px-3 py-1 rounded-full text-teal-200 hidden sm:inline-block">v2.0 Segura</span>
+          <span class="text-xs bg-emerald-500/20 text-emerald-100 border border-emerald-500/30 px-3 py-1 rounded-full hidden sm:flex items-center gap-1">
+            <i class="fa-solid fa-cloud"></i> Firebase Auth
+          </span>
           
           <button onclick="toggleMenuOpciones()" class="w-10 h-10 rounded-full hover:bg-teal-600 dark:hover:bg-teal-800 transition flex items-center justify-center text-xl focus:outline-none relative">
             <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -75,18 +81,18 @@
 
           <div id="menu-opciones" class="hidden absolute right-4 top-16 mt-1 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden transform origin-top-right">
             <div class="py-1">
-              <button onclick="cambiarPin()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3">
-                <i class="fa-solid fa-key text-teal-600 dark:text-teal-400 w-5"></i> Cambiar PIN
-              </button>
-              <button onclick="descargarBaseDeDatos()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700">
-                <i class="fa-solid fa-download text-teal-600 dark:text-teal-400 w-5"></i> Descargar Datos
+              <button onclick="descargarBaseDeDatos()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3">
+                <i class="fa-solid fa-download text-teal-600 dark:text-teal-400 w-5"></i> Descargar Datos (Local)
               </button>
               <label class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700 cursor-pointer mb-0">
-                <i class="fa-solid fa-upload text-amber-500 dark:text-amber-400 w-5"></i> Importar Datos
+                <i class="fa-solid fa-upload text-amber-500 dark:text-amber-400 w-5"></i> Importar Datos (Local)
                 <input type="file" id="input-importar" accept=".json" class="hidden" onchange="importarBaseDeDatos(event)">
               </label>
               <button onclick="toggleModoOscuro()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700">
                 <i class="fa-solid fa-moon text-indigo-500 dark:text-indigo-300 w-5"></i> Modo Oscuro
+              </button>
+              <button onclick="cerrarSesion()" class="w-full text-left px-4 py-3 text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700">
+                <i class="fa-solid fa-power-off w-5"></i> Cerrar Sesión
               </button>
             </div>
           </div>
@@ -97,60 +103,15 @@
     <!-- ========================================= -->
     <!-- VISTA 1: PACIENTES Y DIRECTORIO           -->
     <!-- ========================================= -->
-    <main id="vista-pacientes" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 block">
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-1 h-fit transition-colors">
-        <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-plus-circle text-teal-600 dark:text-teal-400"></i> Nuevo Paciente
-        </h2>
-        <form id="form-paciente" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre de la Mascota</label>
-            <input type="text" id="nombre" required placeholder="Ej: Milo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Especie</label>
-              <select id="especie" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-                <option value="Canino">Canino</option>
-                <option value="Felino">Felino</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Raza</label>
-              <input type="text" id="raza" placeholder="Ej: Mestizo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nacimiento</label>
-              <input type="date" id="fechaNacimiento" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white text-slate-500">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Peso (kg)</label>
-              <input type="number" step="0.1" id="peso" placeholder="Ej: 8.5" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-            </div>
-          </div>
-          <div class="border-t border-slate-100 dark:border-slate-700 pt-3 mt-3">
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Tutor / Dueño</label>
-            <input type="text" id="tutor" required placeholder="Nombre completo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 bg-white dark:bg-slate-700 dark:text-white">
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Teléfono / WhatsApp</label>
-            <input type="tel" id="telefono" placeholder="Ej: 549375715123456" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 bg-white dark:bg-slate-700 dark:text-white">
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Dirección</label>
-            <input type="text" id="direccion" placeholder="Ej: Calle Principal 123" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
-          </div>
-          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
-            <i class="fa-solid fa-save"></i> Registrar Paciente
-          </button>
-        </form>
-      </section>
-
-      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 lg:col-span-2 flex flex-col transition-colors">
+    <main id="vista-pacientes" class="max-w-6xl mx-auto px-4 py-8 block">
+      <section class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 w-full flex flex-col transition-colors">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 gap-3">
           <h2 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-folder-open text-teal-600 dark:text-teal-400"></i> Directorio de Pacientes
+            <i class="fa-solid fa-folder-open text-teal-600 dark:text-teal-400"></i> Directorio de Pacientes <span id="contador" class="text-xs font-semibold bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full ml-2">0</span>
           </h2>
-          <span id="contador" class="text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full">0 Pacientes</span>
+          <button onclick="abrirModalNuevoPaciente()" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition duration-200 shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Cargar Paciente
+          </button>
         </div>
         <div class="mt-4 relative">
           <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
@@ -417,6 +378,63 @@
     </nav>
 
     <!-- ========================================= -->
+    <!-- MODAL: Nuevo Paciente                     -->
+    <!-- ========================================= -->
+    <div id="modal-nuevo-paciente" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden transition-colors">
+        <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="text-xl font-bold text-teal-800 dark:text-teal-400 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle"></i> Nuevo Paciente
+          </h3>
+          <button onclick="cerrarModalNuevoPaciente()" class="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+          <form id="form-paciente" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nombre de la Mascota</label>
+              <input type="text" id="nombre" required placeholder="Ej: Milo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Especie</label>
+                <select id="especie" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+                  <option value="Canino">Canino</option>
+                  <option value="Felino">Felino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Raza</label>
+                <input type="text" id="raza" placeholder="Ej: Mestizo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Nacimiento</label>
+                <input type="date" id="fechaNacimiento" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white dark:bg-slate-700 dark:text-white text-slate-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Peso (kg)</label>
+                <input type="number" step="0.1" id="peso" placeholder="Ej: 8.5" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+              </div>
+            </div>
+            <div class="border-t border-slate-100 dark:border-slate-700 pt-3 mt-3">
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Tutor / Dueño</label>
+              <input type="text" id="tutor" required placeholder="Nombre completo" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 bg-white dark:bg-slate-700 dark:text-white">
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Teléfono / WhatsApp</label>
+              <input type="tel" id="telefono" placeholder="Ej: 549375715123456" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 mb-3 bg-white dark:bg-slate-700 dark:text-white">
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Dirección</label>
+              <input type="text" id="direccion" placeholder="Ej: Calle Principal 123" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 dark:text-white">
+            </div>
+            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-sm flex items-center justify-center gap-2 mt-4">
+              <i class="fa-solid fa-save"></i> Registrar Paciente
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
     <!-- MODAL: Historial Clínico                  -->
     <!-- ========================================= -->
     <div id="modal-historial" class="fixed inset-0 bg-slate-900 bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
@@ -476,7 +494,7 @@
   </div> <!-- FIN APP PRINCIPAL -->
 
   <!-- ========================================= -->
-  <!-- LÓGICA JAVASCRIPT                         -->
+  <!-- 1. LÓGICA PRINCIPAL (Datos Locales)       -->
   <!-- ========================================= -->
   <script>
     // --- VARIABLES GLOBALES ---
@@ -484,52 +502,22 @@
     let turnos = JSON.parse(localStorage.getItem('veterinaria_turnos')) || [];
     let inventario = JSON.parse(localStorage.getItem('veterinaria_stock')) || [];
     let caja = JSON.parse(localStorage.getItem('veterinaria_caja')) || []; 
-    let pinGuardado = localStorage.getItem('veterinaria_pin') || '1234';
     
     pacientes.forEach(p => { if(!p.historial) p.historial = []; });
 
-    // ---------------------------------------------------
-    // X. SISTEMA DE LOGIN Y SEGURIDAD
-    // ---------------------------------------------------
-    const pantallaLogin = document.getElementById('pantalla-login');
-    const appPrincipal = document.getElementById('app-principal');
-    const errorPin = document.getElementById('error-pin');
-    const inputPin = document.getElementById('input-pin');
-
-    document.getElementById('form-login').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (inputPin.value === pinGuardado) {
-        pantallaLogin.classList.add('hidden');
-        appPrincipal.classList.remove('hidden');
-        // LA CORRECCIÓN ESTÁ ACÁ: se usa 'block' en lugar de 'flex'
-        appPrincipal.classList.add('block'); 
-        
-        // Inicializar vistas al entrar
-        renderPacientes(); 
-        renderTurnos();
-        renderStock();
-        renderCaja();
-      } else {
-        errorPin.classList.remove('hidden');
-        inputPin.value = '';
-      }
-    });
-
-    function cambiarPin() {
-      const nuevoPin = prompt("Ingresá tu nuevo PIN numérico de seguridad:");
-      if (nuevoPin && nuevoPin.trim() !== '') {
-        localStorage.setItem('veterinaria_pin', nuevoPin.trim());
-        pinGuardado = nuevoPin.trim();
-        alert("¡PIN actualizado correctamente! Recordalo para la próxima vez que entres.");
-        toggleMenuOpciones();
-      }
+    // Función que llama Firebase una vez que iniciamos sesión
+    window.iniciarAppVeterinaria = function() {
+      renderPacientes(); 
+      renderTurnos();
+      renderStock();
+      renderCaja();
     }
 
     // ---------------------------------------------------
     // A. MENÚ DE OPCIONES Y DESCARGAS
     // ---------------------------------------------------
     const menuOpciones = document.getElementById('menu-opciones');
-    function toggleMenuOpciones() { menuOpciones.classList.toggle('hidden'); }
+    window.toggleMenuOpciones = function() { menuOpciones.classList.toggle('hidden'); }
     
     document.addEventListener('click', (event) => {
       const botonOpciones = document.querySelector('button[onclick="toggleMenuOpciones()"]');
@@ -538,24 +526,24 @@
       }
     });
 
-    function toggleModoOscuro() {
+    window.toggleModoOscuro = function() {
       const htmlElement = document.documentElement;
       htmlElement.classList.toggle('dark');
       localStorage.setItem('veterinaria_tema', htmlElement.classList.contains('dark') ? 'dark' : 'light');
       toggleMenuOpciones();
     }
 
-    function descargarBaseDeDatos() {
+    window.descargarBaseDeDatos = function() {
       const baseDeDatos = { fecha_exportacion: new Date().toISOString(), pacientes, turnos, inventario, caja };
       const blob = new Blob([JSON.stringify(baseDeDatos, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url; link.download = `Veterinaria_Backup_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-      toggleMenuOpciones(); alert("¡Base de datos descargada correctamente!");
+      toggleMenuOpciones(); alert("¡Base de datos local descargada correctamente!");
     }
 
-    function importarBaseDeDatos(event) {
+    window.importarBaseDeDatos = function(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -574,8 +562,8 @@
           if (datos.caja && Array.isArray(datos.caja)) {
             caja = datos.caja; localStorage.setItem('veterinaria_caja', JSON.stringify(caja));
           }
-          renderPacientes(); renderTurnos(); renderStock(); renderCaja(); toggleMenuOpciones();
-          alert("¡Base de datos importada exitosamente!");
+          iniciarAppVeterinaria(); toggleMenuOpciones();
+          alert("¡Base de datos local importada exitosamente!");
         } catch (error) {
           alert("Error: El archivo no tiene el formato correcto.");
         }
@@ -587,7 +575,7 @@
     // ---------------------------------------------------
     // 1. SISTEMA DE PESTAÑAS (VISTAS)
     // ---------------------------------------------------
-    function cambiarVista(vista) {
+    window.cambiarVista = function(vista) {
       const vistas = ['pacientes', 'agenda', 'stock', 'caja'];
       vistas.forEach(v => {
         const elemento = document.getElementById(`vista-${v}`);
@@ -610,8 +598,16 @@
     }
 
     // ---------------------------------------------------
-    // 2. MÓDULO PACIENTES
+    // 2. MÓDULO PACIENTES Y MODAL DE CARGA
     // ---------------------------------------------------
+    const modalNuevoPaciente = document.getElementById('modal-nuevo-paciente');
+    window.abrirModalNuevoPaciente = function() {
+      modalNuevoPaciente.classList.remove('hidden');
+    }
+    window.cerrarModalNuevoPaciente = function() {
+      modalNuevoPaciente.classList.add('hidden');
+    }
+
     function calcularEdad(fechaNacimiento) {
       if (!fechaNacimiento) return "Desconocida";
       const hoy = new Date(); const nac = new Date(fechaNacimiento);
@@ -625,6 +621,13 @@
       return textoAnios || textoMeses;
     }
 
+    function formatearFechaDDMMYYYY(fechaISO) {
+      if (!fechaISO) return '';
+      const partes = fechaISO.split('-');
+      if (partes.length !== 3) return fechaISO;
+      return `${partes[2]}/${partes[1]}/${partes[0]}`; 
+    }
+
     function renderPacientes() {
       const tabla = document.getElementById('tabla-pacientes');
       const vacio = document.getElementById('vacio');
@@ -634,7 +637,7 @@
       const filtrados = pacientes.map((p, index) => ({ ...p, idOriginal: index }))
         .filter(p => p.nombre.toLowerCase().includes(buscador) || p.tutor.toLowerCase().includes(buscador));
 
-      document.getElementById('contador').textContent = `${filtrados.length} Mascota${filtrados.length === 1 ? '' : 's'}`;
+      document.getElementById('contador').textContent = filtrados.length;
       if (filtrados.length === 0) { vacio.classList.remove('hidden'); return; }
       vacio.classList.add('hidden');
 
@@ -660,8 +663,8 @@
         info.mascotas.forEach(p => {
           let ultimaAtencion = "Sin registros";
           if (p.historial && p.historial.length > 0) {
-            const fechas = p.historial.map(h => new Date(h.fecha));
-            ultimaAtencion = new Date(Math.max(...fechas)).toLocaleDateString();
+            const fechas = p.historial.map(h => h.fecha).sort();
+            ultimaAtencion = formatearFechaDDMMYYYY(fechas[fechas.length - 1]);
           }
 
           tabla.innerHTML += `
@@ -694,10 +697,14 @@
         telefono: document.getElementById('telefono').value.trim(), direccion: document.getElementById('direccion').value.trim(),
         historial: []
       });
-      localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); e.target.reset(); renderPacientes();
+      localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); 
+      e.target.reset(); 
+      renderPacientes();
+      cerrarModalNuevoPaciente(); 
     });
 
     document.getElementById('buscador').addEventListener('input', renderPacientes);
+    
     window.eliminarPaciente = (idx) => {
       if (confirm('¿Eliminar mascota?')) { pacientes.splice(idx, 1); localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); renderPacientes(); }
     };
@@ -719,7 +726,7 @@
       
       const ord = [...p.historial].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
       ord.forEach(reg => {
-        const d = new Date(reg.fecha).toLocaleDateString('es-AR', {timeZone: 'UTC'});
+        const d = formatearFechaDDMMYYYY(reg.fecha);
         cont.innerHTML += `<div class="bg-white dark:bg-slate-800 p-3 rounded border border-slate-200 dark:border-slate-700 mb-2 transition-colors"><div class="font-bold text-sm text-teal-700 dark:text-teal-400 flex justify-between"><span>${reg.tipo}</span> <span>${d}</span></div><div class="text-sm mt-1 text-slate-700 dark:text-slate-300">${reg.detalles}</div></div>`;
       });
     }
@@ -747,8 +754,7 @@
       turnos.sort((a, b) => new Date(`${a.fecha}T${a.hora}`) - new Date(`${b.fecha}T${b.hora}`));
 
       turnos.forEach((t, index) => {
-        const fechaObj = new Date(`${t.fecha}T00:00:00`);
-        const diaStr = fechaObj.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+        const diaStr = formatearFechaDDMMYYYY(t.fecha);
 
         let btnWhatsApp = '';
         if (t.telefono) {
@@ -763,7 +769,7 @@
           <div class="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-all">
             <div class="flex items-center gap-4">
               <div class="bg-teal-50 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 rounded-lg p-2 text-center min-w-[75px]">
-                <span class="block text-xs font-bold uppercase">${diaStr}</span>
+                <span class="block text-xs font-bold">${diaStr}</span>
                 <span class="block text-lg font-bold">${t.hora}</span>
               </div>
               <div>
@@ -859,7 +865,7 @@
     // ---------------------------------------------------
     // 5. MÓDULO CAJA Y VENTAS (CON INTEGRACIÓN DE STOCK)
     // ---------------------------------------------------
-    function actualizarSelectStockCaja() {
+    window.actualizarSelectStockCaja = function() {
       const select = document.getElementById('caja-stock-select');
       select.innerHTML = '<option value="">-- Ninguno (Servicio libre o Consulta) --</option>';
       inventario.forEach((item, index) => {
@@ -869,7 +875,7 @@
       });
     }
 
-    window.actualizarFormCajaStock = () => {
+    window.actualizarFormCajaStock = function() {
       const select = document.getElementById('caja-stock-select');
       const divCant = document.getElementById('div-caja-cantidad');
       const inputConcepto = document.getElementById('caja-concepto');
@@ -887,7 +893,7 @@
       }
     };
 
-    window.actualizarMontoStock = () => {
+    window.actualizarMontoStock = function() {
       const select = document.getElementById('caja-stock-select');
       if(select.value === "") return;
       const item = inventario[select.value];
@@ -921,8 +927,7 @@
           if(ingreso.medio === "Mercado Pago" || ingreso.medio === "Transferencia") iconoMedio = "fa-mobile-screen";
           if(ingreso.medio === "Tarjeta") iconoMedio = "fa-credit-card";
 
-          const fechaObj = new Date(`${ingreso.fecha}T00:00:00`);
-          const fechaMuestra = fechaObj.toLocaleDateString('es-AR');
+          const fechaMuestra = formatearFechaDDMMYYYY(ingreso.fecha);
 
           tabla.innerHTML += `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-50 dark:border-slate-700/50">
@@ -980,7 +985,7 @@
       renderCaja();
     });
 
-    window.eliminarIngreso = (index) => {
+    window.eliminarIngreso = function(index) {
       if (confirm('¿Seguro que querés eliminar este ingreso de la caja? (Esto NO devolverá el artículo al stock)')) {
         caja.splice(index, 1); localStorage.setItem('veterinaria_caja', JSON.stringify(caja)); renderCaja();
       }
@@ -989,6 +994,91 @@
     // INICIAR FECHAS DEFAULT DE CAJA
     document.getElementById('caja-filtro-fecha').value = new Date().toISOString().split('T')[0];
     document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
+
+    // --- PWA: REGISTRO DEL SERVICE WORKER ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.log('SW solo funciona en internet');
+        });
+      });
+    }
+  </script>
+
+  <!-- ========================================= -->
+  <!-- 2. LÓGICA DE FIREBASE (Auth y Firestore)  -->
+  <!-- ========================================= -->
+  <script type="module">
+    // 1. Importamos Autenticación y ahora también Base de Datos (Firestore)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+    // ========================================================
+    // PEGA AQUÍ TU CÓDIGO DE CONFIGURACIÓN
+    // ========================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQlSAzrXtbdRIP1KS-UPw1h08DcFc4Ky8",
+      authDomain: "veterinaria-central.firebaseapp.com",
+      projectId: "veterinaria-central",
+      storageBucket: "veterinaria-central.firebasestorage.app",
+      messagingSenderId: "676306932779",
+      appId: "1:676306932779:web:ca076ddba26b9a376dc66e"
+    };
+    // ========================================================
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    // 2. Iniciamos la base de datos y la hacemos global (window.db) para poder usarla en el resto de la app
+    window.db = getFirestore(app);
+    // Exportamos también las funciones necesarias de Firestore
+    window.fs = { collection, addDoc, getDocs, deleteDoc, doc, updateDoc };
+
+    const pantallaLogin = document.getElementById('pantalla-login');
+    const appPrincipal = document.getElementById('app-principal');
+    const formLogin = document.getElementById('form-login');
+    const errorLogin = document.getElementById('error-login');
+    const btnIngresar = document.getElementById('btn-ingresar');
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        pantallaLogin.classList.add('hidden');
+        appPrincipal.classList.remove('hidden');
+        appPrincipal.classList.add('block');
+        window.iniciarAppVeterinaria();
+      } else {
+        pantallaLogin.classList.remove('hidden');
+        pantallaLogin.classList.add('flex');
+        appPrincipal.classList.add('hidden');
+        appPrincipal.classList.remove('block');
+      }
+    });
+
+    formLogin.addEventListener('submit', (e) => {
+      e.preventDefault();
+      btnIngresar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando...';
+      const email = document.getElementById('input-email').value;
+      const password = document.getElementById('input-password').value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          errorLogin.classList.add('hidden');
+          formLogin.reset();
+          btnIngresar.innerHTML = 'Ingresar <i class="fa-solid fa-arrow-right"></i>';
+        })
+        .catch((error) => {
+          errorLogin.classList.remove('hidden');
+          btnIngresar.innerHTML = 'Ingresar <i class="fa-solid fa-arrow-right"></i>';
+          console.error("Error de login:", error.message);
+        });
+    });
+
+    window.cerrarSesion = () => {
+      signOut(auth).then(() => {
+        window.toggleMenuOpciones();
+      }).catch(console.error);
+    };
   </script>
 </body>
 </html>
