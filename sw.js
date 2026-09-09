@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vet-central-v1';
+const CACHE_NAME = 'vet-central-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json',
