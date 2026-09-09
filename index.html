@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <script>
+    // Solo dejamos el modo oscuro en la memoria local (preferencia visual)
     if (localStorage.getItem('veterinaria_tema') === 'dark') {
       document.documentElement.classList.add('dark');
     }
@@ -81,13 +82,9 @@
 
           <div id="menu-opciones" class="hidden absolute right-4 top-16 mt-1 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden transform origin-top-right">
             <div class="py-1">
-              <button onclick="descargarBaseDeDatos()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3">
-                <i class="fa-solid fa-download text-teal-600 dark:text-teal-400 w-5"></i> Descargar Datos (Local)
+              <button onclick="descargarCopiaSeguridad()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3">
+                <i class="fa-solid fa-download text-teal-600 dark:text-teal-400 w-5"></i> Descargar Copia Backup
               </button>
-              <label class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700 cursor-pointer mb-0">
-                <i class="fa-solid fa-upload text-amber-500 dark:text-amber-400 w-5"></i> Importar Datos (Local)
-                <input type="file" id="input-importar" accept=".json" class="hidden" onchange="importarBaseDeDatos(event)">
-              </label>
               <button onclick="toggleModoOscuro()" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-3 border-t border-slate-100 dark:border-slate-700">
                 <i class="fa-solid fa-moon text-indigo-500 dark:text-indigo-300 w-5"></i> Modo Oscuro
               </button>
@@ -130,7 +127,7 @@
             <tbody id="tabla-pacientes" class="text-sm"></tbody>
           </table>
           <div id="vacio" class="text-center py-10 text-slate-400 text-sm">
-            No se encontraron pacientes.
+            Cargando pacientes desde la nube...
           </div>
         </div>
       </section>
@@ -184,8 +181,8 @@
           <i class="fa-regular fa-calendar-days text-teal-600 dark:text-teal-400"></i> Próximos Turnos
         </h2>
         <div id="lista-turnos" class="space-y-3 mt-2"></div>
-        <div id="vacio-turnos" class="text-center py-10 text-slate-400 text-sm hidden">
-          No hay turnos programados.
+        <div id="vacio-turnos" class="text-center py-10 text-slate-400 text-sm">
+          Cargando agenda desde la nube...
         </div>
       </section>
     </main>
@@ -247,8 +244,8 @@
             </thead>
             <tbody id="tabla-stock" class="text-sm"></tbody>
           </table>
-          <div id="vacio-stock" class="text-center py-10 text-slate-400 text-sm hidden">
-            No hay artículos en el inventario.
+          <div id="vacio-stock" class="text-center py-10 text-slate-400 text-sm">
+            Cargando inventario desde la nube...
           </div>
         </div>
       </section>
@@ -345,8 +342,8 @@
             </thead>
             <tbody id="tabla-caja" class="text-sm"></tbody>
           </table>
-          <div id="vacio-caja" class="text-center py-10 text-slate-400 text-sm hidden">
-            No hay ingresos registrados en esta fecha.
+          <div id="vacio-caja" class="text-center py-10 text-slate-400 text-sm">
+            Cargando movimientos desde la nube...
           </div>
         </div>
       </section>
@@ -494,23 +491,59 @@
   </div> <!-- FIN APP PRINCIPAL -->
 
   <!-- ========================================= -->
-  <!-- 1. LÓGICA PRINCIPAL (Datos Locales)       -->
+  <!-- LÓGICA PRINCIPAL (TODO CONECTADO A NUBE)  -->
   <!-- ========================================= -->
   <script>
-    // --- VARIABLES GLOBALES ---
-    let pacientes = JSON.parse(localStorage.getItem('veterinaria_pacientes')) || [];
-    let turnos = JSON.parse(localStorage.getItem('veterinaria_turnos')) || [];
-    let inventario = JSON.parse(localStorage.getItem('veterinaria_stock')) || [];
-    let caja = JSON.parse(localStorage.getItem('veterinaria_caja')) || []; 
+    // Variables globales para almacenar lo que viene de la nube
+    let pacientes = [];
+    let turnos = [];
+    let inventario = [];
+    let caja = []; 
     
-    pacientes.forEach(p => { if(!p.historial) p.historial = []; });
-
-    // Función que llama Firebase una vez que iniciamos sesión
+    // Función central: Se dispara al loguearse con éxito
     window.iniciarAppVeterinaria = function() {
-      renderPacientes(); 
-      renderTurnos();
-      renderStock();
-      renderCaja();
+      cargarPacientesDeFirestore(); 
+      cargarTurnosDeFirestore();
+      cargarStockDeFirestore();
+      cargarCajaDeFirestore();
+    }
+
+    // --- CARGAS DESDE FIREBASE ---
+    window.cargarPacientesDeFirestore = async function() {
+      try {
+        pacientes = [];
+        const qs = await window.fs.getDocs(window.fs.collection(window.db, "pacientes"));
+        qs.forEach(doc => pacientes.push({ id: doc.id, ...doc.data() }));
+        pacientes.forEach(p => { if(!p.historial) p.historial = []; });
+        renderPacientes();
+      } catch (e) { console.error("Error al leer pacientes:", e); }
+    }
+
+    window.cargarTurnosDeFirestore = async function() {
+      try {
+        turnos = [];
+        const qs = await window.fs.getDocs(window.fs.collection(window.db, "turnos"));
+        qs.forEach(doc => turnos.push({ id: doc.id, ...doc.data() }));
+        renderTurnos();
+      } catch (e) { console.error("Error al leer turnos:", e); }
+    }
+
+    window.cargarStockDeFirestore = async function() {
+      try {
+        inventario = [];
+        const qs = await window.fs.getDocs(window.fs.collection(window.db, "inventario"));
+        qs.forEach(doc => inventario.push({ id: doc.id, ...doc.data() }));
+        renderStock();
+      } catch (e) { console.error("Error al leer stock:", e); }
+    }
+
+    window.cargarCajaDeFirestore = async function() {
+      try {
+        caja = [];
+        const qs = await window.fs.getDocs(window.fs.collection(window.db, "caja"));
+        qs.forEach(doc => caja.push({ id: doc.id, ...doc.data() }));
+        renderCaja();
+      } catch (e) { console.error("Error al leer caja:", e); }
     }
 
     // ---------------------------------------------------
@@ -533,43 +566,15 @@
       toggleMenuOpciones();
     }
 
-    window.descargarBaseDeDatos = function() {
+    // Dejamos la opción de hacer backup (te descarga lo que está en memoria en ese momento)
+    window.descargarCopiaSeguridad = function() {
       const baseDeDatos = { fecha_exportacion: new Date().toISOString(), pacientes, turnos, inventario, caja };
       const blob = new Blob([JSON.stringify(baseDeDatos, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url; link.download = `Veterinaria_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.href = url; link.download = `Veterinaria_Backup_Nube_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-      toggleMenuOpciones(); alert("¡Base de datos local descargada correctamente!");
-    }
-
-    window.importarBaseDeDatos = function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const datos = JSON.parse(e.target.result);
-          if (datos.pacientes && Array.isArray(datos.pacientes)) {
-            pacientes = datos.pacientes; localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes));
-          }
-          if (datos.turnos && Array.isArray(datos.turnos)) {
-            turnos = datos.turnos; localStorage.setItem('veterinaria_turnos', JSON.stringify(turnos));
-          }
-          if (datos.inventario && Array.isArray(datos.inventario)) {
-            inventario = datos.inventario; localStorage.setItem('veterinaria_stock', JSON.stringify(inventario));
-          }
-          if (datos.caja && Array.isArray(datos.caja)) {
-            caja = datos.caja; localStorage.setItem('veterinaria_caja', JSON.stringify(caja));
-          }
-          iniciarAppVeterinaria(); toggleMenuOpciones();
-          alert("¡Base de datos local importada exitosamente!");
-        } catch (error) {
-          alert("Error: El archivo no tiene el formato correcto.");
-        }
-        event.target.value = ''; 
-      };
-      reader.readAsText(file);
+      toggleMenuOpciones(); alert("¡Copia de seguridad descargada correctamente!");
     }
 
     // ---------------------------------------------------
@@ -598,15 +603,11 @@
     }
 
     // ---------------------------------------------------
-    // 2. MÓDULO PACIENTES Y MODAL DE CARGA
+    // 2. MÓDULO PACIENTES (NUBE)
     // ---------------------------------------------------
     const modalNuevoPaciente = document.getElementById('modal-nuevo-paciente');
-    window.abrirModalNuevoPaciente = function() {
-      modalNuevoPaciente.classList.remove('hidden');
-    }
-    window.cerrarModalNuevoPaciente = function() {
-      modalNuevoPaciente.classList.add('hidden');
-    }
+    window.abrirModalNuevoPaciente = function() { modalNuevoPaciente.classList.remove('hidden'); }
+    window.cerrarModalNuevoPaciente = function() { modalNuevoPaciente.classList.add('hidden'); }
 
     function calcularEdad(fechaNacimiento) {
       if (!fechaNacimiento) return "Desconocida";
@@ -634,11 +635,14 @@
       const buscador = document.getElementById('buscador').value.toLowerCase();
       tabla.innerHTML = '';
 
-      const filtrados = pacientes.map((p, index) => ({ ...p, idOriginal: index }))
-        .filter(p => p.nombre.toLowerCase().includes(buscador) || p.tutor.toLowerCase().includes(buscador));
+      const filtrados = pacientes.filter(p => p.nombre.toLowerCase().includes(buscador) || p.tutor.toLowerCase().includes(buscador));
 
       document.getElementById('contador').textContent = filtrados.length;
-      if (filtrados.length === 0) { vacio.classList.remove('hidden'); return; }
+      if (filtrados.length === 0) { 
+        vacio.textContent = "No se encontraron pacientes.";
+        vacio.classList.remove('hidden'); 
+        return; 
+      }
       vacio.classList.add('hidden');
 
       const gruposPorTutor = {};
@@ -679,8 +683,8 @@
               </td>
               <td class="py-3 px-2 text-sm dark:text-slate-200">${calcularEdad(p.fechaNacimiento)} <br><span class="text-xs text-slate-500 dark:text-slate-400">${p.peso ? p.peso+' kg' : ''}</span></td>
               <td class="py-3 px-2 text-center space-x-1">
-                <button onclick="abrirHistorial(${p.idOriginal})" class="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 p-1.5 rounded" title="Ver Historial"><i class="fa-solid fa-notes-medical"></i></button>
-                <button onclick="eliminarPaciente(${p.idOriginal})" class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-400 p-1.5 rounded" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+                <button onclick="abrirHistorial('${p.id}')" class="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 p-1.5 rounded" title="Ver Historial"><i class="fa-solid fa-notes-medical"></i></button>
+                <button onclick="eliminarPaciente('${p.id}')" class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-400 p-1.5 rounded" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
               </td>
             </tr>
           `;
@@ -688,38 +692,52 @@
       }
     }
 
-    document.getElementById('form-paciente').addEventListener('submit', (e) => {
+    document.getElementById('form-paciente').addEventListener('submit', async (e) => {
       e.preventDefault();
-      pacientes.push({
-        nombre: document.getElementById('nombre').value.trim(), especie: document.getElementById('especie').value,
-        raza: document.getElementById('raza').value.trim(), fechaNacimiento: document.getElementById('fechaNacimiento').value,
-        peso: document.getElementById('peso').value, tutor: document.getElementById('tutor').value.trim(),
-        telefono: document.getElementById('telefono').value.trim(), direccion: document.getElementById('direccion').value.trim(),
+      const nuevoPaciente = {
+        nombre: document.getElementById('nombre').value.trim(), 
+        especie: document.getElementById('especie').value,
+        raza: document.getElementById('raza').value.trim(), 
+        fechaNacimiento: document.getElementById('fechaNacimiento').value,
+        peso: document.getElementById('peso').value, 
+        tutor: document.getElementById('tutor').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(), 
+        direccion: document.getElementById('direccion').value.trim(),
         historial: []
-      });
-      localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); 
-      e.target.reset(); 
-      renderPacientes();
-      cerrarModalNuevoPaciente(); 
+      };
+      try {
+        await window.fs.addDoc(window.fs.collection(window.db, "pacientes"), nuevoPaciente);
+        e.target.reset(); cerrarModalNuevoPaciente(); cargarPacientesDeFirestore();
+      } catch (error) { alert("Error al guardar el paciente: " + error.message); }
     });
 
     document.getElementById('buscador').addEventListener('input', renderPacientes);
     
-    window.eliminarPaciente = (idx) => {
-      if (confirm('¿Eliminar mascota?')) { pacientes.splice(idx, 1); localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes)); renderPacientes(); }
+    window.eliminarPaciente = async (idFirebase) => {
+      if (confirm('¿Eliminar mascota definitivamente de la base de datos?')) { 
+        try {
+          await window.fs.deleteDoc(window.fs.doc(window.db, "pacientes", idFirebase));
+          cargarPacientesDeFirestore();
+        } catch(error) { alert("Error al eliminar: " + error.message); }
+      }
     };
 
     const modalHistorial = document.getElementById('modal-historial');
-    let pacienteActualIndex = null;
-    window.abrirHistorial = (idx) => {
-      pacienteActualIndex = idx; const p = pacientes[idx];
-      document.getElementById('modal-nombre-mascota').textContent = p.nombre; document.getElementById('modal-datos-tutor').textContent = `Tutor: ${p.tutor}`;
-      document.getElementById('reg-fecha').valueAsDate = new Date(); renderListaHistorial(); modalHistorial.classList.remove('hidden');
+    let pacienteActualId = null;
+
+    window.abrirHistorial = (idFirebase) => {
+      pacienteActualId = idFirebase; 
+      const p = pacientes.find(x => x.id === idFirebase);
+      document.getElementById('modal-nombre-mascota').textContent = p.nombre; 
+      document.getElementById('modal-datos-tutor').textContent = `Tutor: ${p.tutor}`;
+      document.getElementById('reg-fecha').valueAsDate = new Date(); 
+      renderListaHistorial(); modalHistorial.classList.remove('hidden');
     };
-    window.cerrarHistorial = () => { modalHistorial.classList.add('hidden'); pacienteActualIndex = null; };
+    
+    window.cerrarHistorial = () => { modalHistorial.classList.add('hidden'); pacienteActualId = null; };
 
     function renderListaHistorial() {
-      const p = pacientes[pacienteActualIndex];
+      const p = pacientes.find(x => x.id === pacienteActualId);
       const cont = document.getElementById('lista-registros'); cont.innerHTML = '';
       if (!p.historial.length) { document.getElementById('sin-registros').classList.remove('hidden'); return; }
       document.getElementById('sin-registros').classList.add('hidden');
@@ -731,31 +749,42 @@
       });
     }
 
-    document.getElementById('form-registro').addEventListener('submit', (e) => {
+    document.getElementById('form-registro').addEventListener('submit', async (e) => {
       e.preventDefault();
-      pacientes[pacienteActualIndex].historial.push({
-        fecha: document.getElementById('reg-fecha').value, tipo: document.getElementById('reg-tipo').value,
-        peso: document.getElementById('reg-peso').value, detalles: document.getElementById('reg-detalles').value.trim()
-      });
-      localStorage.setItem('veterinaria_pacientes', JSON.stringify(pacientes));
-      e.target.reset(); document.getElementById('reg-fecha').valueAsDate = new Date(); renderListaHistorial(); renderPacientes();
+      const p = pacientes.find(x => x.id === pacienteActualId);
+      const nuevoRegistro = {
+        fecha: document.getElementById('reg-fecha').value, 
+        tipo: document.getElementById('reg-tipo').value,
+        peso: document.getElementById('reg-peso').value, 
+        detalles: document.getElementById('reg-detalles').value.trim()
+      };
+      const nuevoHistorial = [...p.historial, nuevoRegistro];
+
+      try {
+        await window.fs.updateDoc(window.fs.doc(window.db, "pacientes", p.id), { historial: nuevoHistorial });
+        e.target.reset(); document.getElementById('reg-fecha').valueAsDate = new Date(); 
+        await cargarPacientesDeFirestore(); renderListaHistorial(); 
+      } catch(error) { alert("Error al actualizar la ficha: " + error.message); }
     });
 
     // ---------------------------------------------------
-    // 3. MÓDULO AGENDA DE TURNOS
+    // 3. MÓDULO AGENDA DE TURNOS (NUBE)
     // ---------------------------------------------------
     function renderTurnos() {
       const contenedor = document.getElementById('lista-turnos');
       const vacio = document.getElementById('vacio-turnos');
       contenedor.innerHTML = '';
-      if (turnos.length === 0) { vacio.classList.remove('hidden'); return; }
+      if (turnos.length === 0) { 
+        vacio.textContent = "No hay turnos programados.";
+        vacio.classList.remove('hidden'); 
+        return; 
+      }
       vacio.classList.add('hidden');
 
       turnos.sort((a, b) => new Date(`${a.fecha}T${a.hora}`) - new Date(`${b.fecha}T${b.hora}`));
 
-      turnos.forEach((t, index) => {
+      turnos.forEach((t) => {
         const diaStr = formatearFechaDDMMYYYY(t.fecha);
-
         let btnWhatsApp = '';
         if (t.telefono) {
           const numeroLimpio = t.telefono.replace(/\D/g,'');
@@ -779,32 +808,40 @@
             </div>
             <div class="flex items-center gap-2">
               ${btnWhatsApp}
-              <button onclick="eliminarTurno(${index})" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition p-2"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
+              <button onclick="eliminarTurno('${t.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition p-2"><i class="fa-solid fa-circle-xmark text-xl"></i></button>
             </div>
           </div>
         `;
       });
     }
 
-    document.getElementById('form-turno').addEventListener('submit', (e) => {
+    document.getElementById('form-turno').addEventListener('submit', async (e) => {
       e.preventDefault();
-      turnos.push({
-        fecha: document.getElementById('turno-fecha').value, hora: document.getElementById('turno-hora').value,
-        nombre: document.getElementById('turno-nombre').value.trim(), telefono: document.getElementById('turno-telefono').value.trim(),
+      const nuevoTurno = {
+        fecha: document.getElementById('turno-fecha').value, 
+        hora: document.getElementById('turno-hora').value,
+        nombre: document.getElementById('turno-nombre').value.trim(), 
+        telefono: document.getElementById('turno-telefono').value.trim(),
         motivo: document.getElementById('turno-motivo').value
-      });
-      localStorage.setItem('veterinaria_turnos', JSON.stringify(turnos));
-      e.target.reset(); document.getElementById('turno-fecha').valueAsDate = new Date(); renderTurnos();
+      };
+      try {
+        await window.fs.addDoc(window.fs.collection(window.db, "turnos"), nuevoTurno);
+        e.target.reset(); document.getElementById('turno-fecha').valueAsDate = new Date();
+        cargarTurnosDeFirestore();
+      } catch (error) { alert("Error al guardar turno: " + error.message); }
     });
 
-    window.eliminarTurno = (index) => {
+    window.eliminarTurno = async (idFirebase) => {
       if (confirm('¿Seguro que deseas cancelar este turno?')) {
-        turnos.splice(index, 1); localStorage.setItem('veterinaria_turnos', JSON.stringify(turnos)); renderTurnos();
+        try {
+          await window.fs.deleteDoc(window.fs.doc(window.db, "turnos", idFirebase));
+          cargarTurnosDeFirestore();
+        } catch (error) { alert("Error al cancelar: " + error.message); }
       }
     };
 
     // ---------------------------------------------------
-    // 4. MÓDULO INVENTARIO Y STOCK
+    // 4. MÓDULO INVENTARIO Y STOCK (NUBE)
     // ---------------------------------------------------
     function renderStock() {
       const tabla = document.getElementById('tabla-stock');
@@ -813,10 +850,14 @@
       
       actualizarSelectStockCaja();
 
-      if (inventario.length === 0) { vacio.classList.remove('hidden'); return; }
+      if (inventario.length === 0) { 
+        vacio.textContent = "No hay artículos en el inventario.";
+        vacio.classList.remove('hidden'); 
+        return; 
+      }
       vacio.classList.add('hidden');
 
-      inventario.forEach((item, index) => {
+      inventario.forEach((item) => {
         const esBajoStock = item.cantidad <= 3;
         const colorCantidad = esBajoStock ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-800 dark:text-slate-200 font-bold';
 
@@ -826,51 +867,63 @@
             <td class="py-3 px-2 text-xs text-slate-500 dark:text-slate-400">${item.categoria}</td>
             <td class="py-3 px-2 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button onclick="modificarCantidad(${index}, -1)" class="w-7 h-7 rounded bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition"><i class="fa-solid fa-minus text-xs"></i></button>
+                <button onclick="modificarCantidad('${item.id}', -1)" class="w-7 h-7 rounded bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition"><i class="fa-solid fa-minus text-xs"></i></button>
                 <span class="w-6 text-center ${colorCantidad}">${item.cantidad}</span>
-                <button onclick="modificarCantidad(${index}, 1)" class="w-7 h-7 rounded bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                <button onclick="modificarCantidad('${item.id}', 1)" class="w-7 h-7 rounded bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 flex items-center justify-center text-slate-600 dark:text-slate-300 transition"><i class="fa-solid fa-plus text-xs"></i></button>
               </div>
             </td>
             <td class="py-3 px-2 text-sm text-slate-700 dark:text-slate-300 font-medium">$${item.precio || 0}</td>
             <td class="py-3 px-2 text-center">
-              <button onclick="eliminarArticulo(${index})" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
+              <button onclick="eliminarArticulo('${item.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
             </td>
           </tr>
         `;
       });
     }
 
-    document.getElementById('form-stock').addEventListener('submit', (e) => {
+    document.getElementById('form-stock').addEventListener('submit', async (e) => {
       e.preventDefault();
-      inventario.push({
-        nombre: document.getElementById('stock-nombre').value.trim(), categoria: document.getElementById('stock-categoria').value,
-        cantidad: parseInt(document.getElementById('stock-cantidad').value), precio: document.getElementById('stock-precio').value
-      });
-      localStorage.setItem('veterinaria_stock', JSON.stringify(inventario));
-      e.target.reset(); renderStock();
+      const nuevoItem = {
+        nombre: document.getElementById('stock-nombre').value.trim(), 
+        categoria: document.getElementById('stock-categoria').value,
+        cantidad: parseInt(document.getElementById('stock-cantidad').value), 
+        precio: parseFloat(document.getElementById('stock-precio').value) || 0
+      };
+      try {
+        await window.fs.addDoc(window.fs.collection(window.db, "inventario"), nuevoItem);
+        e.target.reset(); cargarStockDeFirestore();
+      } catch (error) { alert("Error al guardar: " + error.message); }
     });
 
-    window.modificarCantidad = (index, delta) => {
-      let nuevaCantidad = inventario[index].cantidad + delta;
+    window.modificarCantidad = async (idFirebase, delta) => {
+      const item = inventario.find(x => x.id === idFirebase);
+      let nuevaCantidad = item.cantidad + delta;
       if (nuevaCantidad < 0) nuevaCantidad = 0; 
-      inventario[index].cantidad = nuevaCantidad; localStorage.setItem('veterinaria_stock', JSON.stringify(inventario)); renderStock();
+      
+      try {
+        await window.fs.updateDoc(window.fs.doc(window.db, "inventario", idFirebase), { cantidad: nuevaCantidad });
+        cargarStockDeFirestore();
+      } catch (error) { alert("Error al actualizar stock: " + error.message); }
     };
 
-    window.eliminarArticulo = (index) => {
-      if (confirm('¿Eliminar artículo?')) {
-        inventario.splice(index, 1); localStorage.setItem('veterinaria_stock', JSON.stringify(inventario)); renderStock();
+    window.eliminarArticulo = async (idFirebase) => {
+      if (confirm('¿Eliminar artículo definitivamente?')) {
+        try {
+          await window.fs.deleteDoc(window.fs.doc(window.db, "inventario", idFirebase));
+          cargarStockDeFirestore();
+        } catch (error) { alert("Error: " + error.message); }
       }
     };
 
     // ---------------------------------------------------
-    // 5. MÓDULO CAJA Y VENTAS (CON INTEGRACIÓN DE STOCK)
+    // 5. MÓDULO CAJA Y VENTAS (NUBE CON INTEGRACIÓN STOCK)
     // ---------------------------------------------------
     window.actualizarSelectStockCaja = function() {
       const select = document.getElementById('caja-stock-select');
       select.innerHTML = '<option value="">-- Ninguno (Servicio libre o Consulta) --</option>';
-      inventario.forEach((item, index) => {
+      inventario.forEach((item) => {
         if(item.cantidad > 0) {
-          select.innerHTML += `<option value="${index}">${item.nombre} (Disponibles: ${item.cantidad} | $${item.precio})</option>`;
+          select.innerHTML += `<option value="${item.id}">${item.nombre} (Disponibles: ${item.cantidad} | $${item.precio})</option>`;
         }
       });
     }
@@ -882,7 +935,7 @@
       const inputMonto = document.getElementById('caja-monto');
 
       if(select.value !== "") {
-        const item = inventario[select.value];
+        const item = inventario.find(x => x.id === select.value);
         divCant.classList.remove('hidden');
         inputConcepto.value = `Venta: ${item.nombre}`;
         actualizarMontoStock();
@@ -896,7 +949,7 @@
     window.actualizarMontoStock = function() {
       const select = document.getElementById('caja-stock-select');
       if(select.value === "") return;
-      const item = inventario[select.value];
+      const item = inventario.find(x => x.id === select.value);
       const cant = parseInt(document.getElementById('caja-stock-cantidad').value) || 1;
       document.getElementById('caja-monto').value = (item.precio * cant).toFixed(2);
     };
@@ -913,16 +966,12 @@
       let totalDia = 0;
       let totalMes = 0;
 
-      caja.forEach((ingreso, index) => {
+      caja.forEach((ingreso) => {
         const montoNum = parseFloat(ingreso.monto);
-        
-        if (ingreso.fecha.substring(0,7) === mesFiltro) {
-          totalMes += montoNum;
-        }
+        if (ingreso.fecha.substring(0,7) === mesFiltro) totalMes += montoNum;
 
         if (ingreso.fecha === filtroFecha) {
           totalDia += montoNum;
-          
           let iconoMedio = "fa-money-bill-wave"; 
           if(ingreso.medio === "Mercado Pago" || ingreso.medio === "Transferencia") iconoMedio = "fa-mobile-screen";
           if(ingreso.medio === "Tarjeta") iconoMedio = "fa-credit-card";
@@ -936,7 +985,7 @@
               <td class="py-3 px-2 text-xs text-slate-500 dark:text-slate-400"><i class="fa-solid ${iconoMedio} mr-1"></i> ${ingreso.medio}</td>
               <td class="py-3 px-2 text-sm text-teal-700 dark:text-teal-400 font-bold">$${montoNum.toFixed(2)}</td>
               <td class="py-3 px-2 text-center">
-                <button onclick="eliminarIngreso(${index})" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
+                <button onclick="eliminarIngreso('${ingreso.id}')" class="text-slate-300 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>
               </td>
             </tr>
           `;
@@ -944,6 +993,7 @@
       });
 
       if (totalDia === 0 && tabla.innerHTML === '') { 
+        vacio.textContent = "No hay ingresos registrados en esta fecha.";
         vacio.classList.remove('hidden'); 
       } else {
         vacio.classList.add('hidden');
@@ -953,41 +1003,50 @@
       totalMesDiv.textContent = `$${totalMes.toFixed(2)}`;
     }
 
-    document.getElementById('form-caja').addEventListener('submit', (e) => {
+    document.getElementById('form-caja').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      const stockSelectIndex = document.getElementById('caja-stock-select').value;
+      const stockSelectId = document.getElementById('caja-stock-select').value;
       const cantVenta = parseInt(document.getElementById('caja-stock-cantidad').value) || 1;
 
-      if (stockSelectIndex !== "") {
-        if (inventario[stockSelectIndex].cantidad >= cantVenta) {
-          inventario[stockSelectIndex].cantidad -= cantVenta; 
-          localStorage.setItem('veterinaria_stock', JSON.stringify(inventario));
-          renderStock(); 
+      // Si se seleccionó un producto del stock, primero restamos la cantidad en la nube
+      if (stockSelectId !== "") {
+        const item = inventario.find(x => x.id === stockSelectId);
+        if (item.cantidad >= cantVenta) {
+          try {
+            await window.fs.updateDoc(window.fs.doc(window.db, "inventario", stockSelectId), {
+              cantidad: item.cantidad - cantVenta
+            });
+            cargarStockDeFirestore(); 
+          } catch(error) { alert("Error al descontar stock: " + error.message); return; }
         } else {
           alert("¡No hay suficiente stock de este artículo para realizar la venta!");
           return; 
         }
       }
 
-      caja.push({
+      // Luego, registramos el ingreso en la caja
+      const nuevoIngreso = {
         fecha: document.getElementById('caja-fecha').value,
         concepto: document.getElementById('caja-concepto').value.trim(),
-        monto: document.getElementById('caja-monto').value,
+        monto: parseFloat(document.getElementById('caja-monto').value) || 0,
         medio: document.getElementById('caja-medio').value
-      });
-      localStorage.setItem('veterinaria_caja', JSON.stringify(caja));
+      };
       
-      e.target.reset();
-      document.getElementById('div-caja-cantidad').classList.add('hidden');
-      document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
-      
-      renderCaja();
+      try {
+        await window.fs.addDoc(window.fs.collection(window.db, "caja"), nuevoIngreso);
+        e.target.reset();
+        document.getElementById('div-caja-cantidad').classList.add('hidden');
+        document.getElementById('caja-fecha').value = new Date().toISOString().split('T')[0];
+        cargarCajaDeFirestore();
+      } catch(error) { alert("Error al guardar ingreso: " + error.message); }
     });
 
-    window.eliminarIngreso = function(index) {
+    window.eliminarIngreso = async (idFirebase) => {
       if (confirm('¿Seguro que querés eliminar este ingreso de la caja? (Esto NO devolverá el artículo al stock)')) {
-        caja.splice(index, 1); localStorage.setItem('veterinaria_caja', JSON.stringify(caja)); renderCaja();
+        try {
+          await window.fs.deleteDoc(window.fs.doc(window.db, "caja", idFirebase));
+          cargarCajaDeFirestore();
+        } catch(error) { alert("Error: " + error.message); }
       }
     };
 
@@ -1009,14 +1068,10 @@
   <!-- 2. LÓGICA DE FIREBASE (Auth y Firestore)  -->
   <!-- ========================================= -->
   <script type="module">
-    // 1. Importamos Autenticación y ahora también Base de Datos (Firestore)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    // ========================================================
-    // PEGA AQUÍ TU CÓDIGO DE CONFIGURACIÓN
-    // ========================================================
     const firebaseConfig = {
       apiKey: "AIzaSyBQlSAzrXtbdRIP1KS-UPw1h08DcFc4Ky8",
       authDomain: "veterinaria-central.firebaseapp.com",
@@ -1025,14 +1080,10 @@
       messagingSenderId: "676306932779",
       appId: "1:676306932779:web:ca076ddba26b9a376dc66e"
     };
-    // ========================================================
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    
-    // 2. Iniciamos la base de datos y la hacemos global (window.db) para poder usarla en el resto de la app
     window.db = getFirestore(app);
-    // Exportamos también las funciones necesarias de Firestore
     window.fs = { collection, addDoc, getDocs, deleteDoc, doc, updateDoc };
 
     const pantallaLogin = document.getElementById('pantalla-login');
